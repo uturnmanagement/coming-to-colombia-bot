@@ -1,0 +1,45 @@
+# Region pack: Luxury
+# Style pack — premium-cabin deal hunting. High thresholds (only large
+# savings matter at this price point), short layovers, premium carriers.
+region:
+  name: Luxury Long-Haul
+  slug: luxury
+  description: Business/first-class fare drops on premium long-haul routes.
+
+origin:
+  primary: JFK
+  label: New York JFK
+
+destinations:
+  DXB: { city: "Dubai", typical_price_usd: 3200 }
+  SIN: { city: "Singapore", typical_price_usd: 3600 }
+  HKG: { city: "Hong Kong", typical_price_usd: 3400 }
+  LHR: { city: "London Heathrow", typical_price_usd: 2400 }
+  CDG: { city: "Paris", typical_price_usd: 2500 }
+  DOH: { city: "Doha", typical_price_usd: 3100 }
+
+gateways:
+  EWR: "Newark"
+  BOS: "Boston"
+  IAD: "Washington Dulles"
+
+positioning:
+  min_savings_usd: 600
+  max_layover_hours: 6
+  preferred_gateways:
+    DXB: [EWR, BOS, IAD]
+    SIN: [EWR, IAD]
+    HKG: [EWR, BOS]
+    LHR: [EWR, BOS, IAD]
+    CDG: [EWR, BOS]
+    DOH: [EWR, IAD]
+
+thresholds:
+  red_min_savings_usd: 1200
+  yellow_min_savings_usd: 600
+
+scan:
+  days_ahead: 45
+
+preferred_airlines: [Emirates, Qatar Airways, Singapore Airlines, Cathay Pacific, ANA]
+budget_label: luxury

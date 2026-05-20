@@ -1,0 +1,24 @@
+[Unit]
+# OpsHub Global Airfare Intelligence System — systemd service template.
+# Replace the __PLACEHOLDERS__ below, then install as:
+#   sudo cp airfare-intelligence.service.template \
+#           /etc/systemd/system/airfare-intelligence.service
+# One service per region pack — copy with a unique name to run several
+# markets on one VPS (e.g. airfare-colombia.service, airfare-japan.service).
+Description=OpsHub Global Airfare Intelligence System (__REGION__)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__RUN_USER__
+WorkingDirectory=__PROJECT_DIR__
+ExecStart=__PROJECT_DIR__/.venv/bin/python __PROJECT_DIR__/main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=append:__PROJECT_DIR__/logs/service.log
+StandardError=append:__PROJECT_DIR__/logs/service.log
+
+[Install]
+WantedBy=multi-user.target

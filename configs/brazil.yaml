@@ -1,0 +1,46 @@
+# Region pack: Brazil
+# Deal hunting from Miami to major Brazilian cities.
+region:
+  name: Brazil
+  slug: brazil
+  description: Cheap one-way flights from Miami to Brazil.
+
+origin:
+  primary: MIA
+  label: Miami
+
+destinations:
+  GRU: { city: "São Paulo", typical_price_usd: 470 }
+  GIG: { city: "Rio de Janeiro", typical_price_usd: 500 }
+  BSB: { city: "Brasília", typical_price_usd: 560 }
+  SSA: { city: "Salvador", typical_price_usd: 540 }
+  REC: { city: "Recife", typical_price_usd: 520 }
+  FOR: { city: "Fortaleza", typical_price_usd: 530 }
+
+gateways:
+  MCO: "Orlando"
+  FLL: "Fort Lauderdale"
+  JFK: "New York JFK"
+  IAH: "Houston"
+  PTY: "Panama City"
+
+positioning:
+  min_savings_usd: 120
+  max_layover_hours: 14
+  preferred_gateways:
+    GRU: [MCO, FLL, JFK, IAH, PTY]
+    GIG: [MCO, FLL, JFK, PTY]
+    BSB: [MCO, FLL, PTY]
+    SSA: [MCO, FLL, PTY]
+    REC: [MCO, FLL, JFK]
+    FOR: [MCO, FLL]
+
+thresholds:
+  red_min_savings_usd: 180
+  yellow_min_savings_usd: 90
+
+scan:
+  days_ahead: 28
+
+preferred_airlines: [LATAM, GOL, Azul, American, Copa]
+budget_label: standard

@@ -1,0 +1,54 @@
+# Region pack: Southeast Asia
+# Long-haul deal hunting from the US West Coast to Southeast Asia.
+region:
+  name: Southeast Asia
+  slug: southeast_asia
+  description: Cheap one-way flights from Los Angeles to Southeast Asia.
+
+origin:
+  primary: LAX
+  label: Los Angeles
+
+destinations:
+  BKK:
+    city: "Bangkok"
+    typical_price_usd: 620
+    arrival_rules:
+      preferred_start: 8
+      preferred_end: 16
+      late_night_start: 23
+  SGN: { city: "Ho Chi Minh City", typical_price_usd: 680 }
+  HAN: { city: "Hanoi", typical_price_usd: 700 }
+  SIN: { city: "Singapore", typical_price_usd: 640 }
+  KUL: { city: "Kuala Lumpur", typical_price_usd: 690 }
+  DPS: { city: "Bali Denpasar", typical_price_usd: 720 }
+  MNL: { city: "Manila", typical_price_usd: 650 }
+
+gateways:
+  SFO: "San Francisco"
+  SEA: "Seattle"
+  ICN: "Seoul Incheon"
+  NRT: "Tokyo Narita"
+  TPE: "Taipei"
+
+positioning:
+  min_savings_usd: 150
+  max_layover_hours: 18
+  preferred_gateways:
+    BKK: [SFO, SEA, ICN, NRT, TPE]
+    SGN: [SFO, SEA, ICN, TPE]
+    HAN: [SFO, SEA, ICN, TPE]
+    SIN: [SFO, SEA, ICN, NRT]
+    KUL: [SFO, SEA, ICN, TPE]
+    DPS: [SFO, SEA, ICN, NRT]
+    MNL: [SFO, SEA, ICN, NRT, TPE]
+
+thresholds:
+  red_min_savings_usd: 250
+  yellow_min_savings_usd: 130
+
+scan:
+  days_ahead: 35
+
+preferred_airlines: [EVA Air, Korean Air, ANA, Singapore Airlines, China Airlines]
+budget_label: standard

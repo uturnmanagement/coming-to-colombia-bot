@@ -1,0 +1,8 @@
+# OpsHub Global Airfare Intelligence System — Python dependencies
+python-telegram-bot[job-queue]>=21.0,<23.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+PyYAML>=6.0
+# tzdata ships the IANA timezone database for ZoneInfo (required on
+# Windows; harmless on Linux VPS hosts).
+tzdata>=2024.1

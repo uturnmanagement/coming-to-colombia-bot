@@ -1,0 +1,1 @@
+# Keeps the logs/ directory in git. Runtime logs and JSON state are gitignored.

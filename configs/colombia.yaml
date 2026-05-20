@@ -1,0 +1,55 @@
+# Region pack: Colombia
+# Reproduces the original, verified BWI -> Colombia live deployment.
+region:
+  name: Colombia
+  slug: colombia
+  description: Cheap one-way flights from the US mid-Atlantic to Colombia.
+
+origin:
+  primary: BWI
+  label: Baltimore/Washington
+
+destinations:
+  BOG: { city: "Bogotá", typical_price_usd: 330 }
+  MDE:
+    city: "Medellín"
+    typical_price_usd: 350
+    # MDE airport sits ~45 min from the city — reward daytime arrivals.
+    arrival_rules:
+      preferred_start: 10
+      preferred_end: 15
+      late_night_start: 21
+  CLO: { city: "Cali", typical_price_usd: 390 }
+  CTG: { city: "Cartagena", typical_price_usd: 300 }
+  BAQ: { city: "Barranquilla", typical_price_usd: 360 }
+  SMR: { city: "Santa Marta", typical_price_usd: 430 }
+
+gateways:
+  MIA: "Miami"
+  FLL: "Fort Lauderdale"
+  JFK: "New York JFK"
+  LGA: "New York LaGuardia"
+  EWR: "Newark"
+  ATL: "Atlanta"
+  MCO: "Orlando"
+
+positioning:
+  min_savings_usd: 100
+  max_layover_hours: 12
+  preferred_gateways:
+    BOG: [MIA, FLL, JFK, EWR, ATL, MCO, LGA]
+    MDE: [MIA, FLL, JFK, EWR, ATL, MCO]
+    CLO: [MIA, FLL, JFK, ATL]
+    CTG: [MIA, FLL, JFK, EWR, ATL, MCO]
+    BAQ: [MIA, FLL, ATL]
+    SMR: [MIA, FLL]
+
+thresholds:
+  red_min_savings_usd: 150
+  yellow_min_savings_usd: 75
+
+scan:
+  days_ahead: 21
+
+preferred_airlines: [Avianca, LATAM, Copa, American, JetBlue, Delta]
+budget_label: standard

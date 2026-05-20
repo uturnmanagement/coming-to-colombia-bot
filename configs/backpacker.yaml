@@ -1,0 +1,47 @@
+# Region pack: Backpacker
+# Style pack — rock-bottom fares, long layovers tolerated, low alert
+# thresholds so even modest savings surface. Tuned for budget travelers.
+region:
+  name: Backpacker Routes
+  slug: backpacker
+  description: Lowest-fare backpacker hops across Southeast Asia.
+
+origin:
+  primary: BKK
+  label: Bangkok
+
+destinations:
+  SGN: { city: "Ho Chi Minh City", typical_price_usd: 95 }
+  REP: { city: "Siem Reap", typical_price_usd: 110 }
+  DAD: { city: "Da Nang", typical_price_usd: 105 }
+  RGN: { city: "Yangon", typical_price_usd: 120 }
+  VTE: { city: "Vientiane", typical_price_usd: 115 }
+  DPS: { city: "Bali Denpasar", typical_price_usd: 160 }
+  KUL: { city: "Kuala Lumpur", typical_price_usd: 90 }
+
+gateways:
+  SIN: "Singapore"
+  KUL: "Kuala Lumpur"
+  DMK: "Bangkok Don Muang"
+
+positioning:
+  min_savings_usd: 25
+  max_layover_hours: 24
+  preferred_gateways:
+    SGN: [SIN, KUL, DMK]
+    REP: [DMK, SIN]
+    DAD: [SIN, KUL]
+    RGN: [DMK, KUL]
+    VTE: [DMK]
+    DPS: [SIN, KUL]
+    KUL: [SIN, DMK]
+
+thresholds:
+  red_min_savings_usd: 50
+  yellow_min_savings_usd: 25
+
+scan:
+  days_ahead: 14
+
+preferred_airlines: [AirAsia, VietJet, Scoot, Cebu Pacific, Nok Air]
+budget_label: budget

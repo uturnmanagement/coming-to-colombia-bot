@@ -1,0 +1,51 @@
+# Region pack: Digital Nomad Hubs
+# Style pack — one-way fares between the world's top remote-work cities.
+region:
+  name: Digital Nomad Hubs
+  slug: nomad
+  description: One-way deal scans across popular digital-nomad cities.
+
+origin:
+  primary: LIS
+  label: Lisbon
+
+destinations:
+  BKK: { city: "Bangkok", typical_price_usd: 480 }
+  DPS: { city: "Bali Denpasar", typical_price_usd: 560 }
+  MEX: { city: "Mexico City", typical_price_usd: 420 }
+  MDE:
+    city: "Medellín"
+    typical_price_usd: 520
+    arrival_rules:
+      preferred_start: 10
+      preferred_end: 16
+      late_night_start: 21
+  TBS: { city: "Tbilisi", typical_price_usd: 220 }
+  CMN: { city: "Casablanca", typical_price_usd: 180 }
+
+gateways:
+  MAD: "Madrid"
+  IST: "Istanbul"
+  DXB: "Dubai"
+  CDG: "Paris"
+
+positioning:
+  min_savings_usd: 80
+  max_layover_hours: 16
+  preferred_gateways:
+    BKK: [IST, DXB, MAD]
+    DPS: [IST, DXB]
+    MEX: [MAD, CDG]
+    MDE: [MAD, IST]
+    TBS: [IST, MAD]
+    CMN: [MAD, CDG, IST]
+
+thresholds:
+  red_min_savings_usd: 130
+  yellow_min_savings_usd: 65
+
+scan:
+  days_ahead: 25
+
+preferred_airlines: [TAP, Turkish Airlines, Wizz Air, Iberia, Emirates]
+budget_label: standard

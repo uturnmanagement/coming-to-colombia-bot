@@ -1,0 +1,45 @@
+# Region pack: Mexico
+# Deal hunting from Dallas to popular Mexican destinations.
+region:
+  name: Mexico
+  slug: mexico
+  description: Cheap one-way flights from Dallas to Mexico.
+
+origin:
+  primary: DFW
+  label: Dallas/Fort Worth
+
+destinations:
+  MEX: { city: "Mexico City", typical_price_usd: 210 }
+  CUN: { city: "Cancún", typical_price_usd: 240 }
+  GDL: { city: "Guadalajara", typical_price_usd: 220 }
+  PVR: { city: "Puerto Vallarta", typical_price_usd: 260 }
+  SJD: { city: "Los Cabos", typical_price_usd: 280 }
+  MTY: { city: "Monterrey", typical_price_usd: 190 }
+
+gateways:
+  IAH: "Houston"
+  AUS: "Austin"
+  PHX: "Phoenix"
+  LAX: "Los Angeles"
+
+positioning:
+  min_savings_usd: 70
+  max_layover_hours: 10
+  preferred_gateways:
+    MEX: [IAH, AUS, PHX]
+    CUN: [IAH, AUS, LAX]
+    GDL: [IAH, PHX, LAX]
+    PVR: [PHX, LAX]
+    SJD: [PHX, LAX]
+    MTY: [IAH, AUS]
+
+thresholds:
+  red_min_savings_usd: 110
+  yellow_min_savings_usd: 55
+
+scan:
+  days_ahead: 18
+
+preferred_airlines: [Aeroméxico, Volaris, Viva Aerobus, American, Southwest]
+budget_label: budget

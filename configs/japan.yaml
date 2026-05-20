@@ -1,0 +1,45 @@
+# Region pack: Japan
+# Deal hunting from the US West Coast to major Japanese cities.
+region:
+  name: Japan
+  slug: japan
+  description: Cheap one-way flights from Los Angeles to Japan.
+
+origin:
+  primary: LAX
+  label: Los Angeles
+
+destinations:
+  NRT: { city: "Tokyo Narita", typical_price_usd: 560 }
+  HND: { city: "Tokyo Haneda", typical_price_usd: 600 }
+  KIX: { city: "Osaka Kansai", typical_price_usd: 590 }
+  FUK: { city: "Fukuoka", typical_price_usd: 680 }
+  CTS: { city: "Sapporo", typical_price_usd: 700 }
+  OKA: { city: "Okinawa", typical_price_usd: 720 }
+
+gateways:
+  SFO: "San Francisco"
+  SEA: "Seattle"
+  ICN: "Seoul Incheon"
+  TPE: "Taipei"
+
+positioning:
+  min_savings_usd: 140
+  max_layover_hours: 16
+  preferred_gateways:
+    NRT: [SFO, SEA]
+    HND: [SFO, SEA]
+    KIX: [SFO, SEA, ICN]
+    FUK: [SFO, SEA, ICN, TPE]
+    CTS: [SFO, SEA, ICN]
+    OKA: [ICN, TPE]
+
+thresholds:
+  red_min_savings_usd: 220
+  yellow_min_savings_usd: 110
+
+scan:
+  days_ahead: 35
+
+preferred_airlines: [ANA, Japan Airlines, ZIPAIR, Korean Air, United]
+budget_label: standard

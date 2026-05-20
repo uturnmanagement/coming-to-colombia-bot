@@ -1,0 +1,48 @@
+# Region pack: Europe
+# Transatlantic deal hunting from New York to major European cities.
+region:
+  name: Europe
+  slug: europe
+  description: Cheap one-way flights from New York to Western Europe.
+
+origin:
+  primary: JFK
+  label: New York JFK
+
+destinations:
+  LON: { city: "London", typical_price_usd: 420 }
+  PAR: { city: "Paris", typical_price_usd: 440 }
+  BCN: { city: "Barcelona", typical_price_usd: 430 }
+  ROM: { city: "Rome", typical_price_usd: 470 }
+  AMS: { city: "Amsterdam", typical_price_usd: 450 }
+  LIS: { city: "Lisbon", typical_price_usd: 400 }
+  BER: { city: "Berlin", typical_price_usd: 460 }
+
+gateways:
+  BOS: "Boston"
+  EWR: "Newark"
+  IAD: "Washington Dulles"
+  ORD: "Chicago O'Hare"
+  KEF: "Reykjavik (Iceland hub)"
+
+positioning:
+  min_savings_usd: 120
+  max_layover_hours: 14
+  preferred_gateways:
+    LON: [BOS, EWR, IAD, KEF]
+    PAR: [BOS, EWR, IAD, KEF]
+    BCN: [BOS, EWR, KEF]
+    ROM: [BOS, EWR, ORD]
+    AMS: [BOS, EWR, IAD, KEF]
+    LIS: [BOS, EWR, IAD]
+    BER: [BOS, EWR, KEF]
+
+thresholds:
+  red_min_savings_usd: 200
+  yellow_min_savings_usd: 100
+
+scan:
+  days_ahead: 30
+
+preferred_airlines: [TAP, Iberia, Aer Lingus, Norse, Icelandair, United]
+budget_label: standard
