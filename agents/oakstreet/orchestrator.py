@@ -91,7 +91,12 @@ class OakStreet:
             self._last_snapshot[event.deal_id] = current
             text = self._render_initial(event)
             self.dispatcher.send(
-                text, kind="alert", deal_id=event.deal_id, now=event.observed_at
+                text,
+                kind="alert",
+                deal_id=event.deal_id,
+                color=event.color,
+                route_signature=event.route_signature,
+                now=event.observed_at,
             )
             return None
 
@@ -119,6 +124,8 @@ class OakStreet:
                 text,
                 kind="heartbeat",
                 deal_id=event.deal_id,
+                color=event.color,
+                route_signature=event.route_signature,
                 now=event.observed_at,
             )
             self.db.update_after_heartbeat(

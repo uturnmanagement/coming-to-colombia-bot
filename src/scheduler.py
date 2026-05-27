@@ -22,8 +22,50 @@ def _scan_day(config):
     return datetime.now().date() + timedelta(days=config.scan_days_ahead)
 
 
-async def _send(context, text: str) -> None:
-    config = context.bot_data["config"]
+def _route_signature(result) -> str | None:
+    """Stable route-signature string for the dispatcher's dedupe layer."""
+    rec = result.comparison.recommended
+    if rec is None:
+        return f"{result.comparison.destination}<-none"
+    if rec.strategy == "direct":
+        return f"direct->{result.comparison.destination}"
+    gateway = rec.gateway or "?"
+    return f"positioning->{gateway}->{result.comparison.destination}"
+
+
+async def _send(context, text: str, *, kind: str = "alert",
+                color: str | None = None, deal_id: str | None = None,
+                route_signature: str | None = None) -> None:
+    """Outbound Telegram seam for the scanner.
+
+    Layer 2 wiring:
+      - When the kill switch `desk_config.scanner_telegram_enabled` is
+        False, the direct `context.bot.send_message` path is suppressed.
+      - If Oak Street is wired into bot_data, the suppressed send is
+        re-routed through its dispatcher (severity gate + dedupe +
+        cooldown + audit). If Oak Street is not wired, the message is
+        dropped silently — only the audit logger (if attached) records.
+      - When the kill switch is True (default), legacy behavior is
+        preserved bit-for-bit: direct send via the PTB application bot.
+    """
+    data = context.bot_data
+    desk_config = data.get("desk_config")
+    oak = data.get("oakstreet")
+
+    if desk_config is not None and not desk_config.scanner_telegram_enabled:
+        if oak is not None:
+            oak.dispatcher.send(
+                text, kind=kind, deal_id=deal_id, color=color,
+                route_signature=route_signature,
+            )
+        else:
+            log.info(
+                "scanner Telegram send suppressed by SCANNER_TELEGRAM_ENABLED=false "
+                "and Oak Street is not wired (kind=%s color=%s)", kind, color,
+            )
+        return
+
+    config = data["config"]
     await context.bot.send_message(
         chat_id=config.telegram_chat_id,
         text=text,
@@ -73,12 +115,20 @@ async def scan_job(context) -> None:
             reds += 1
             newly_armed = heartbeat.register(result.destination)
             if newly_armed or not storage.was_alerted(key):
-                await _send(context, format_deal_alert(result))
+                await _send(
+                    context, format_deal_alert(result),
+                    kind="alert", color="red", deal_id=key,
+                    route_signature=_route_signature(result),
+                )
                 storage.mark_alerted(key)
         elif color == DealColor.YELLOW:
             yellows += 1
             if not storage.was_alerted(key):
-                await _send(context, format_deal_alert(result))
+                await _send(
+                    context, format_deal_alert(result),
+                    kind="alert", color="yellow", deal_id=key,
+                    route_signature=_route_signature(result),
+                )
                 storage.mark_alerted(key)
     log.info(
         "scan complete: %d deals (%d red, %d yellow)", len(results), reds, yellows
@@ -92,7 +142,7 @@ async def heartbeat_job(context) -> None:
         return
 
     async def send(text: str) -> None:
-        await _send(context, text)
+        await _send(context, text, kind="heartbeat", color="red")
 
     try:
         await heartbeat.tick(send)
@@ -113,7 +163,7 @@ async def daily_summary_job(context) -> None:
             log.exception("daily summary scan failed")
             return
     scan_time = data.get("last_scan_at") or datetime.now()
-    await _send(context, format_daily_summary(results, scan_time))
+    await _send(context, format_daily_summary(results, scan_time), kind="digest")
 
 
 def setup_jobs(application, config) -> None:

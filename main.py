@@ -24,6 +24,16 @@ from src.scheduler import setup_jobs
 from src.storage import Storage
 from src.telegram_handlers import register_handlers
 
+# Layer 2 — Colombia Desk orchestration wiring. The legacy scanner above
+# still runs unchanged; Oak Street layers on top through bot_data so the
+# scanner's `_send` can re-route through it when the kill switch is off.
+from agents.config import load_desk_config
+from agents.logging_setup import setup_logging as setup_desk_logging
+from agents.oakstreet import OakStreet
+from db.sqlite_manager import SqliteManager
+from links.live_send_audit import LiveSendAuditor
+from links.telegram_dispatcher import TelegramDispatcher
+
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 
 
@@ -106,6 +116,23 @@ def main() -> None:
     storage = Storage(LOG_DIR)
     heartbeat = HeartbeatManager(config, fetcher, storage)
 
+    # --- Colombia Desk / Oak Street wiring (Layer 2) ------------------
+    desk_config = load_desk_config()
+    setup_desk_logging(desk_config.logs_dir, level=desk_config.log_level)
+    desk_db = SqliteManager(
+        db_path=desk_config.sqlite_path, dry_run=desk_config.dry_run
+    )
+    auditor = LiveSendAuditor(desk_config.audit_log_path)
+    dispatcher = TelegramDispatcher(
+        bot_token=desk_config.telegram_bot_token,
+        chat_id=desk_config.telegram_chat_id,
+        dry_run=desk_config.dry_run,
+        cooldown_seconds=desk_config.live_send_cooldown_seconds,
+    )
+    dispatcher.attach_auditor(auditor)
+    oakstreet = OakStreet(db=desk_db, dispatcher=dispatcher)
+    # ------------------------------------------------------------------
+
     application = (
         Application.builder()
         .token(config.telegram_bot_token)
@@ -113,6 +140,28 @@ def main() -> None:
         .post_init(_on_start)
         .build()
     )
+
+    def _bot_sender(chat_id: str, text: str) -> None:
+        """Live Telegram send via the running PTB application bot.
+
+        Fire-and-forget: the coroutine is scheduled on the running
+        application event loop via `Application.create_task`. We do
+        not await — the dispatcher's caller is often a sync code path
+        (Oak Street simulations) and the dispatcher's interface is
+        synchronous. Send failures propagate to the application's
+        central error handler (`_on_error`) which logs them; the
+        dispatcher's audit log records `outcome="sent"` at the
+        scheduling moment.
+        """
+        application.create_task(
+            application.bot.send_message(
+                chat_id=chat_id, text=text, parse_mode="HTML",
+                disable_web_page_preview=True,
+            )
+        )
+
+    dispatcher.sender = _bot_sender
+
     application.bot_data.update(
         {
             "config": config,
@@ -121,7 +170,18 @@ def main() -> None:
             "heartbeat": heartbeat,
             "latest_results": [],
             "last_scan_at": None,
+            # Layer 2 wiring — exposed to src.scheduler._send.
+            "desk_config": desk_config,
+            "oakstreet": oakstreet,
         }
+    )
+
+    log.info(
+        "Colombia Desk wired: scanner_telegram_enabled=%s dry_run=%s "
+        "live_send_cooldown=%ds",
+        desk_config.scanner_telegram_enabled,
+        desk_config.dry_run,
+        desk_config.live_send_cooldown_seconds,
     )
 
     register_handlers(application)
