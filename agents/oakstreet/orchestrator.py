@@ -55,6 +55,9 @@ class OakStreet:
     # of these lives in the deals table; this cache is for hot lookups
     # within a process lifetime.
     _last_snapshot: dict[str, AlertSnapshot] = field(default_factory=dict)
+    # Per-deal specialist-report cache: deal_id -> {agent -> SpecialistReport}.
+    # Populated by `ingest_report`, consumed by `synthesize_briefing`.
+    _reports_cache: dict[str, dict[str, object]] = field(default_factory=dict)
 
     # --- ingress ---------------------------------------------------------
 
@@ -155,7 +158,7 @@ class OakStreet:
             )
         return decision
 
-    # --- specialist reports (placeholder for Layer 2+) -------------------
+    # --- specialist reports ----------------------------------------------
 
     def ingest_specialist_report(
         self,
@@ -165,10 +168,12 @@ class OakStreet:
         deal_id: Optional[str] = None,
         now: Optional[datetime] = None,
     ) -> None:
-        """Stub that records a specialist report.
+        """Untyped legacy ingestion path — retained for Layer 1 callers.
 
-        Layer 2 (Echo/India/Juliet) will rewire the renderers above to
-        consume these reports and inject them into Oak Street's output.
+        New Layer 3 specialists hand in a `SpecialistReport` via
+        `ingest_report(...)` below. This older method still works for
+        ad-hoc payloads and is what the `specialist_reports` table
+        was originally wired against.
         """
         when = now or datetime.now()
         self.db.insert_specialist_report(
@@ -178,6 +183,161 @@ class OakStreet:
             deal_id=deal_id,
         )
         log.info("Recorded specialist report from %s (deal=%s)", specialist, deal_id)
+
+    def ingest_report(self, report) -> None:
+        """Typed ingestion path used by Delta / Echo / future specialists.
+
+        Persists the report under the agent name and caches it per-deal
+        so `synthesize_briefing(deal_id)` can pull every specialist's
+        contribution together. No Telegram side-effects from this call;
+        the briefing is produced explicitly via `synthesize_briefing`.
+        """
+        # Late-bound import to avoid a circular dependency at module
+        # load time (the specialists import this module).
+        from agents.specialist_report import SpecialistReport
+
+        if not isinstance(report, SpecialistReport):
+            raise TypeError(
+                f"ingest_report expects a SpecialistReport, got {type(report).__name__}"
+            )
+        self.db.insert_specialist_report(
+            specialist=report.agent,
+            report_at=report.observed_at,
+            payload_json=report.to_json(),
+            deal_id=report.deal_id,
+        )
+        if report.deal_id is not None:
+            self._reports_cache.setdefault(report.deal_id, {})[report.agent] = report
+        log.info(
+            "Recorded SpecialistReport agent=%s status=%s conf=%.2f deal=%s",
+            report.agent, report.status.value, report.confidence, report.deal_id,
+        )
+
+    def synthesize_briefing(
+        self, deal_id: str, *, now: Optional[datetime] = None
+    ) -> Optional[str]:
+        """Combine the cached specialist reports for one deal into a
+        single internal briefing text. DRY_RUN-safe: this only renders
+        text; whether to send is the dispatcher's call.
+
+        Returns None when no reports are cached yet for the deal.
+        """
+        when = now or datetime.now()
+        reports = self._reports_cache.get(deal_id)
+        if not reports:
+            return None
+
+        deal_row = self.db.get_deal(deal_id)
+        header = self._render_briefing_header(deal_id, deal_row)
+        sections: list[str] = [header]
+
+        delta = reports.get("delta")
+        if delta is not None:
+            sections.append(self._render_delta_section(delta))
+        echo = reports.get("echo")
+        if echo is not None:
+            sections.append(self._render_echo_section(echo))
+
+        # Unknown specialists (future India / Juliet / etc.) appear after
+        # the named ones, in deterministic order.
+        for name in sorted(reports):
+            if name in ("delta", "echo"):
+                continue
+            sections.append(
+                f"<b>{name.upper()}</b> — status={reports[name].status.value} "
+                f"conf={reports[name].confidence:.2f}"
+            )
+
+        footer = (
+            f"\n<i>Internal briefing rendered at "
+            f"{when.strftime('%Y-%m-%d %H:%M:%S')} — DRY_RUN check at dispatch.</i>"
+        )
+        return "\n\n".join(sections) + footer
+
+    def dispatch_briefing(
+        self, deal_id: str, *, color: str = "red",
+        route_signature: str = "", now: Optional[datetime] = None,
+    ) -> Optional[str]:
+        """Render the briefing and push through the centralized
+        dispatcher with kind='heartbeat'. Layer 3 keeps DRY_RUN=true,
+        so the dispatcher will record-and-not-send; the rendered text
+        is still returned for inspection.
+        """
+        text = self.synthesize_briefing(deal_id, now=now)
+        if text is None:
+            return None
+        self.dispatcher.send(
+            text,
+            kind="heartbeat",   # heartbeat-channel is the natural carrier
+            deal_id=deal_id,
+            color=color,
+            route_signature=route_signature,
+            now=now,
+        )
+        return text
+
+    # --- briefing rendering ----------------------------------------------
+
+    def _render_briefing_header(self, deal_id: str, deal_row) -> str:
+        if not deal_row:
+            return (
+                f"🧭 <b>Colombia Desk — internal briefing</b>\n"
+                f"Deal id: <code>{deal_id}</code>"
+            )
+        color_raw = deal_row.get("last_color") or ""
+        color_label = color_raw.upper() if color_raw else "?"
+        icon = _color_icon(color_raw)
+        price = deal_row.get("last_price_usd")
+        route = deal_row.get("last_route_signature") or "?"
+        lines = [
+            f"{icon} <b>Colombia Desk — internal briefing ({color_label})</b>",
+            f"Route: {route}",
+        ]
+        if isinstance(price, (int, float)):
+            lines.append(f"Outbound price: ${price:.0f}")
+        lines.append(f"Deal id: <code>{deal_id}</code>")
+        return "\n".join(lines)
+
+    def _render_delta_section(self, report) -> str:
+        lines = [f"<b>DELTA · return pairing</b> ({report.status.value}, conf {report.confidence:.2f})"]
+        options = report.payload.get("options", [])
+        priced = [o for o in options if o.get("round_trip_total_usd") is not None]
+        if not priced:
+            lines.append("  no priced return windows")
+        else:
+            best = min(priced, key=lambda o: o["round_trip_total_usd"])
+            lines.append(
+                f"  best: {best['window_days']}d → "
+                f"${best['round_trip_total_usd']:.0f} round-trip "
+                f"(return {best['return_date']})"
+            )
+            for o in options:
+                if o["round_trip_total_usd"] is None:
+                    lines.append(f"  {o['window_days']:>3}d: —")
+                else:
+                    lines.append(
+                        f"  {o['window_days']:>3}d: ${o['round_trip_total_usd']:.0f}"
+                    )
+        for flag in report.flags:
+            lines.append(f"  flag: {flag}")
+        return "\n".join(lines)
+
+    def _render_echo_section(self, report) -> str:
+        payload = report.payload
+        label = payload.get("label", "?")
+        pct = report.verdict_input.get("price_position_pct", 0.0)
+        typical = payload.get("typical_price_usd")
+        lines = [
+            f"<b>ECHO · price context</b> ({report.status.value}, conf {report.confidence:.2f})",
+            f"  label: {label} ({pct:.1f}% of typical ${typical:.0f})"
+            if isinstance(typical, (int, float))
+            else f"  label: {label}",
+        ]
+        if payload.get("lodging_signal") is None:
+            lines.append("  lodging signal: <i>reserved for Layer 4</i>")
+        for flag in report.flags:
+            lines.append(f"  flag: {flag}")
+        return "\n".join(lines)
 
     # --- rendering (one-voice) -------------------------------------------
 
