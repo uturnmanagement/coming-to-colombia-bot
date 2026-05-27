@@ -310,3 +310,65 @@ VPS deploy, repo rename, monetization.
 ---
 
 **End of report. Layer 3 complete. No deploy. No push. No Layer 4.**
+
+---
+
+## Addendum (2026-05-27) — Configurable return-window modes
+
+Layer 3 ships with a single canonical window list. This addendum
+adds an env-driven resolver so operators can switch between the
+canonical list and an exhaustive day-by-day range without code
+changes. Default behavior is unchanged.
+
+### Env surface
+
+| Env var | Mode | Default | Notes |
+|---|---|---|---|
+| `RETURN_WINDOW_MODE` | both | `fixed` | `fixed` or `range` (case-insensitive). |
+| `RETURN_WINDOWS_DAYS` | fixed | unset → canonical | Comma-separated positive integers, e.g. `4,7,10,14`. Whitespace OK. Empty/zero/negative entries rejected. |
+| `RETURN_MIN_DAYS` | range | `4` | Inclusive lower bound; must be ≥ 1. |
+| `RETURN_MAX_DAYS` | range | `60` | Inclusive upper bound; must be ≥ `RETURN_MIN_DAYS`. |
+| `RETURN_WINDOW_STEP_DAYS` | range | `1` | Step ≥ 1. Endpoints inclusive when the step lands; otherwise stops at the largest value ≤ max. |
+
+### New surface
+
+- `intel.return_pairing.resolve_return_windows(env=None)` — picks the
+  active tuple from environment (or an injected mapping for tests).
+- `intel.return_pairing.range_windows(min_days, max_days, step=1)` —
+  pure date math. Validates every input.
+- `intel.return_pairing.parse_fixed_list(raw)` — parses
+  `RETURN_WINDOWS_DAYS`. Skips empty entries, rejects non-integers
+  / non-positives, rejects empty result.
+- `intel.return_pairing.ReturnWindowMode` — enum, `FIXED` / `RANGE`.
+
+### Delta integration
+
+`Delta.windows` now resolves at construction (via
+`resolve_return_windows()`) unless an explicit `windows=` is passed
+to the constructor. A per-call `analyze(event, windows=...)` override
+takes precedence over the construction-bound list. The env read
+happens **once** at construction so a long-running process cannot
+drift mid-loop if the env changes underneath it.
+
+### Test coverage
+
+`tests/test_layer3_return_window_modes.py` — **23 tests**:
+
+- Default and fixed-mode resolution paths (canonical, env override,
+  whitespace tolerance, case-insensitive mode token).
+- Range-mode resolution including the explicit acceptance case
+  `RETURN_WINDOW_MODE=range, MIN=4, MAX=60, STEP=1` producing every
+  integer from 4 through 60 inclusive (57 windows).
+- Step != 1 (every-other-day mode); step that doesn't land on max.
+- Validation: bad mode, bad min, bad min/max ordering, bad step,
+  non-integer fixed entry, non-positive fixed entry, empty fixed list.
+- Delta construction picks up resolved windows; explicit constructor
+  override; per-call `analyze()` override; env-driven range mode
+  produces 57 options in the report payload.
+
+### Out of scope for this enhancement
+
+The new modes are purely for window selection. Delta still uses the
+placeholder return-leg fetcher; switching to live fetch (Skyscanner /
+Amadeus) remains Layer 4 work. DRY_RUN and SCANNER_TELEGRAM_ENABLED
+remain unchanged. No deploy. No push.

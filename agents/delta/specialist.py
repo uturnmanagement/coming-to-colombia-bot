@@ -24,6 +24,7 @@ from intel.return_pairing import (
     ReturnLegFetcher,
     RETURN_WINDOWS_DAYS,
     estimate_pairing,
+    resolve_return_windows,
 )
 
 log = get_logger("delta")
@@ -53,22 +54,37 @@ def placeholder_return_fetcher(
 
 @dataclass
 class Delta:
-    """Return Pairing specialist."""
+    """Return Pairing specialist.
+
+    The active window list is resolved once at construction from the
+    environment via `resolve_return_windows()`. Pass `windows=` to the
+    constructor (or to `analyze`) to bypass env resolution — tests
+    and any caller that needs deterministic windows should do so.
+    """
     fetcher: ReturnLegFetcher = placeholder_return_fetcher
+    windows: tuple[int, ...] | None = None
+
+    def __post_init__(self) -> None:
+        if self.windows is None:
+            # Bind once at construction — re-reading os.environ on every
+            # analyze() risks subtle drift inside a long-running process.
+            self.windows = resolve_return_windows()
 
     def analyze(
         self,
         event: AlertEvent,
         *,
         origin: str = "BWI",
-        windows=RETURN_WINDOWS_DAYS,
+        windows: tuple[int, ...] | None = None,
     ) -> SpecialistReport:
         """Pair the outbound observation with each return window.
 
-        DRY_RUN-safe: the specialist itself never sends anywhere. Oak
-        Street decides whether the report is rendered, recorded, or
-        suppressed.
+        Per-call `windows=` overrides the construction-bound list (useful
+        for one-off scans). DRY_RUN-safe: the specialist itself never
+        sends anywhere. Oak Street decides whether the report is
+        rendered, recorded, or suppressed.
         """
+        active_windows = windows if windows is not None else self.windows
         destination = self._destination_from_route(event.route_signature)
         outbound_depart = event.departure_at.date()
         estimate: PairingEstimate = estimate_pairing(
@@ -77,7 +93,7 @@ class Delta:
             outbound_depart=outbound_depart,
             outbound_price_usd=event.price_usd,
             fetcher=self.fetcher,
-            windows=windows,
+            windows=active_windows,
         )
 
         return self._to_report(event, estimate, observed_at=event.observed_at)

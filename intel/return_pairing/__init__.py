@@ -8,7 +8,14 @@ Exports:
     generate_windows       date arithmetic
     estimate_pairing       pure pairing under a fetcher protocol
 """
-from .windows import RETURN_WINDOWS_DAYS, generate_windows
+from .windows import (
+    RETURN_WINDOWS_DAYS,
+    ReturnWindowMode,
+    generate_windows,
+    parse_fixed_list,
+    range_windows,
+    resolve_return_windows,
+)
 from .pairing import (
     PairingEstimate,
     ReturnLegFetcher,
@@ -18,9 +25,13 @@ from .pairing import (
 
 __all__ = [
     "RETURN_WINDOWS_DAYS",
+    "ReturnWindowMode",
     "ReturnLegFetcher",
     "ReturnOption",
     "PairingEstimate",
     "generate_windows",
+    "parse_fixed_list",
+    "range_windows",
+    "resolve_return_windows",
     "estimate_pairing",
 ]
