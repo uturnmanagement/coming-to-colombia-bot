@@ -74,6 +74,50 @@ async def _send(context, text: str, *, kind: str = "alert",
     )
 
 
+def _event_from_result(result, config):
+    """Build an Oak Street AlertEvent from a scanner DealResult.
+
+    Lazy import keeps src/ free of a top-level agents dependency (the
+    scanner must remain importable on its own). departure_at uses the
+    scan day at local midnight — the heartbeat engine only needs a stable
+    datetime, not a precise gate time.
+    """
+    from agents.oakstreet import AlertEvent  # local import on purpose
+    depart = datetime.combine(_scan_day(config), time(hour=0, minute=0))
+    return AlertEvent(
+        deal_id=make_deal_key(result),
+        color=result.color.value.lower(),
+        price_usd=float(result.classification.price_usd),
+        route_signature=_route_signature(result) or "",
+        departure_at=depart,
+        observed_at=datetime.now(),
+        summary=result.classification.explanation,
+    )
+
+
+async def _emit_red(context, result, key: str) -> None:
+    """Emit a RED deal.
+
+    Layer 7B: when the Oak Street pipeline is wired into bot_data AND the
+    scanner kill switch is off, route through the full
+    ingest_alert -> specialists -> dispatch_briefing flow. Otherwise fall
+    back to the legacy single-alert send. DRY_RUN-safe either way — the
+    pipeline only touches the dispatcher, which is hermetic under DRY_RUN.
+    """
+    data = context.bot_data
+    pipeline = data.get("desk_pipeline")
+    desk_config = data.get("desk_config")
+    if (pipeline is not None and desk_config is not None
+            and not desk_config.scanner_telegram_enabled):
+        pipeline.process_event(_event_from_result(result, data["config"]))
+        return
+    await _send(
+        context, format_deal_alert(result),
+        kind="alert", color="red", deal_id=key,
+        route_signature=_route_signature(result),
+    )
+
+
 def run_full_scan(bot_data: dict) -> list:
     """Pure scan: build a ranked DealResult list for every destination."""
     config = bot_data["config"]
@@ -115,11 +159,7 @@ async def scan_job(context) -> None:
             reds += 1
             newly_armed = heartbeat.register(result.destination)
             if newly_armed or not storage.was_alerted(key):
-                await _send(
-                    context, format_deal_alert(result),
-                    kind="alert", color="red", deal_id=key,
-                    route_signature=_route_signature(result),
-                )
+                await _emit_red(context, result, key)
                 storage.mark_alerted(key)
         elif color == DealColor.YELLOW:
             yellows += 1

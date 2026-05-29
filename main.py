@@ -30,7 +30,10 @@ from src.telegram_handlers import register_handlers
 from agents.config import load_desk_config
 from agents.logging_setup import setup_logging as setup_desk_logging
 from agents.oakstreet import OakStreet
+from agents.oakstreet.pipeline import DeskPipeline
 from db.sqlite_manager import SqliteManager
+from intel.lodging import LodgingIntelService, LodgingStorage
+from intel.lodging.providers import MockLodgingProvider
 from links.live_send_audit import LiveSendAuditor
 from links.telegram_dispatcher import TelegramDispatcher
 
@@ -131,6 +134,20 @@ def main() -> None:
     )
     dispatcher.attach_auditor(auditor)
     oakstreet = OakStreet(db=desk_db, dispatcher=dispatcher)
+
+    # Layer 7B — desk pipeline: ingest_alert -> specialists -> briefing.
+    # India consults a mock-backed lodging brain (hermetic, no network).
+    # DRY_RUN keeps every dispatch record-only until live arming (7C).
+    lodging_service = None
+    if desk_config.lodging_intel_enabled:
+        lodging_service = LodgingIntelService(
+            storage=LodgingStorage(desk_db),
+            providers=[MockLodgingProvider()],
+            lookback_days=desk_config.lodging_baseline_lookback_days,
+        )
+    desk_pipeline = DeskPipeline(
+        oakstreet=oakstreet, lodging_service=lodging_service
+    )
     # ------------------------------------------------------------------
 
     application = (
@@ -173,6 +190,8 @@ def main() -> None:
             # Layer 2 wiring — exposed to src.scheduler._send.
             "desk_config": desk_config,
             "oakstreet": oakstreet,
+            # Layer 7B wiring — exposed to src.scheduler._emit_red.
+            "desk_pipeline": desk_pipeline,
         }
     )
 

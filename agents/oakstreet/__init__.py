@@ -15,3 +15,9 @@ __all__ = ["OakStreet", "AlertEvent"]
 # from agents.oakstreet stays a single canonical entrypoint for
 # downstream callers / specialists.
 from agents.specialist_report import SpecialistReport, Status  # noqa: E402,F401
+
+# NOTE: DeskPipeline is intentionally NOT re-exported here. It imports the
+# specialists (Delta/Echo/India), which in turn import
+# agents.oakstreet.orchestrator — importing it from this package __init__
+# creates a circular import. Import it from its submodule instead:
+#     from agents.oakstreet.pipeline import DeskPipeline, PipelineResult
