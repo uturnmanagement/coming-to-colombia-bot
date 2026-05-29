@@ -1,4 +1,12 @@
-# GitHub Release Readiness Checklist — Colombia Desk v1 (Layer 1–5 freeze)
+# GitHub Release Readiness Checklist — Coming to Colombia Desk v1 (Layer 1–5 freeze)
+
+> **Rename note (post-execution, 2026-05-29):** the directory + GitHub
+> repo rename to `coming-to-colombia-bot` has now been *executed in the
+> repo content* on branch `repo-rename-coming-to-colombia-bot`. The
+> on-disk Windows folder and the GitHub remote still carry the old
+> name until the operator performs the rename steps in
+> `docs/REPO_RENAME_EXECUTION_REPORT.md` §"Next steps". The §7 table
+> below reflects the in-repo state, not the on-disk state.
 
 **Audit date:** 2026-05-28
 **Audited tip commit:** `74c4fe9` on `layer-5-india-hostel-intelligence`
@@ -128,12 +136,13 @@ docs/
 └── COUNTRY_BOT_CLONING_GUIDE.md                        (Phase A — clone recipe)
 ```
 
-Plus the original `README.md` (top-level) which still describes the
-underlying L0 worldwide-airfare framework. **Note:** the README will
-be rewritten in the Colombia-Desk pivot per
-`REPO_RENAME_MIGRATION.md`. Not a release blocker — the repo is
-publishable as-is; readers see the L0 README plus the per-layer docs
-that describe what Colombia Desk added on top.
+Plus the top-level `README.md`, now rewritten under the **Coming to
+Colombia Bot** identity (post-rename, branch
+`repo-rename-coming-to-colombia-bot`). It opens with the desk identity
+and then describes the underlying config-driven framework that powers
+it. Readers see the rebranded README plus the per-layer docs that
+describe what the Coming to Colombia Desk added on top of the L0
+framework.
 
 ---
 
@@ -190,18 +199,22 @@ left blank, no real value. Acceptable.
 
 ## 7. Repository identity at publish
 
-| Surface | Current value | Target value |
-|---|---|---|
-| Local directory | `opshub_global_airfare_intelligence_system\` | `coming_to_colombia_bot\` |
-| GitHub remote | `github.com/uturnmanagement/opshub-global-airfare-intelligence-system` | `github.com/uturnmanagement/coming-to-colombia-bot` |
-| `setup.py` / `pyproject.toml` | none | — |
-| `__version__` in `src/__init__.py` | `2.0.0` | unchanged |
-| `__version__` in `agents/__init__.py` | `0.1.0` | unchanged |
+| Surface | Pre-rename value | Post-rename value (target) | Status |
+|---|---|---|---|
+| Project display name | `OpsHub Global Airfare Intelligence System` | `Coming to Colombia Bot` | ✅ in-repo |
+| Local directory | `opshub_global_airfare_intelligence_system\` | `coming-to-colombia-bot\` | ⏳ operator step |
+| GitHub remote | `github.com/uturnmanagement/opshub-global-airfare-intelligence-system` | `github.com/uturnmanagement/coming-to-colombia-bot` | ⏳ operator step |
+| systemd template filename | `airfare-intelligence.service.template` | `coming-to-colombia-bot.service.template` | ✅ in-repo |
+| `setup.py` / `pyproject.toml` | none | — | n/a |
+| `__version__` in `src/__init__.py` | `2.0.0` | unchanged | preserved |
+| `__version__` in `agents/__init__.py` | `0.1.0` | unchanged | preserved |
 
-The rename to `coming-to-colombia-bot` is planned in
-`REPO_RENAME_MIGRATION.md` but **not** executed. The repo can be
-published under the current name; the rename is a deliberate Phase 0
-follow-up the operator has held back.
+The rename to `coming-to-colombia-bot` has been **executed in the repo
+content** on branch `repo-rename-coming-to-colombia-bot` (docs,
+configs, README, systemd template, skill docs all rebranded). The two
+operator-only steps that remain are the Windows folder rename and the
+GitHub repo rename — both documented in
+`docs/REPO_RENAME_EXECUTION_REPORT.md`.
 
 ---
 
@@ -210,11 +223,13 @@ follow-up the operator has held back.
 Run these in order; check each off in the commit / PR description
 before publishing.
 
-- [ ] **Operator decision:** include / move / delete
-  `REPO_RENAME_MIGRATION.md` (currently untracked).
-- [ ] **Operator decision:** execute the rename to
-  `coming-to-colombia-bot` per migration plan, OR publish under the
-  current name with a README pointing at the renamed identity.
+- [x] **Operator decision (2026-05-29):** `REPO_RENAME_MIGRATION.md`
+  + `docs/REPO_RENAME_PLAN_v2.md` committed on branch
+  `repo-rename-planning`.
+- [x] **Operator decision (2026-05-29):** in-repo rename executed on
+  branch `repo-rename-coming-to-colombia-bot`. Operator-side Windows
+  folder rename + GitHub repo rename are still pending — see
+  `docs/REPO_RENAME_EXECUTION_REPORT.md`.
 - [ ] Confirm `.env` is not staged. (`git status -s` shows no
   `.env` line.)
 - [ ] Confirm `git check-ignore -v .env` resolves the rule.

@@ -1,10 +1,10 @@
-# Architecture Freeze v1 — Colombia Desk (Coming-to-Colombia Bot)
+# Architecture Freeze v1 — Coming to Colombia Desk (Coming to Colombia Bot)
 
 **Frozen on:** 2026-05-28
 **Branch at freeze:** `layer-5-india-hostel-intelligence`
 **Tip commit:** `74c4fe9` — LAYER 5
-**Repo on disk:** `C:\Users\uturn\opshub_global_airfare_intelligence_system\` (pre-rename)
-**Repo destination:** `coming-to-colombia-bot` (per `REPO_RENAME_MIGRATION.md`)
+**Repo on disk:** `C:\Users\uturn\opshub_global_airfare_intelligence_system\` (Windows folder rename pending — see `REPO_RENAME_EXECUTION_REPORT.md`)
+**Project identity (in-repo, post-rename):** `coming-to-colombia-bot` (rebrand executed 2026-05-29 on branch `repo-rename-coming-to-colombia-bot`)
 **Test totals at freeze:** **235/235 passing** + 4 DRY_RUN simulation scenarios complete
 
 > This document is the authoritative record of what the Colombia Desk
@@ -32,7 +32,9 @@
 ## 2. Complete architecture tree (frozen state on disk)
 
 ```
-opshub_global_airfare_intelligence_system/        ← repo (pre-rename)
+coming-to-colombia-bot/                           ← repo (project identity rebranded 2026-05-29;
+                                                    Windows folder rename pending — see
+                                                    docs/REPO_RENAME_EXECUTION_REPORT.md)
 │
 ├── main.py                                       ← entry point
 ├── requirements.txt

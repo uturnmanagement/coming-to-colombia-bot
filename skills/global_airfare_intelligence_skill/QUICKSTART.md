@@ -3,7 +3,7 @@
 ## 1. Install
 
 ```bash
-cd opshub_global_airfare_intelligence_system
+cd coming-to-colombia-bot
 python -m venv .venv
 source .venv/bin/activate        # Windows: .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt

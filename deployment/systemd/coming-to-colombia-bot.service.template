@@ -1,11 +1,12 @@
 [Unit]
-# OpsHub Global Airfare Intelligence System — systemd service template.
+# Coming to Colombia Bot — systemd service template.
 # Replace the __PLACEHOLDERS__ below, then install as:
-#   sudo cp airfare-intelligence.service.template \
-#           /etc/systemd/system/airfare-intelligence.service
+#   sudo cp coming-to-colombia-bot.service.template \
+#           /etc/systemd/system/coming-to-colombia-bot.service
 # One service per region pack — copy with a unique name to run several
-# markets on one VPS (e.g. airfare-colombia.service, airfare-japan.service).
-Description=OpsHub Global Airfare Intelligence System (__REGION__)
+# markets on one VPS (e.g. coming-to-colombia-bot.service for the live
+# Colombia desk, or airfare-japan.service if you bring up a Japan fork).
+Description=Coming to Colombia Bot (__REGION__)
 After=network-online.target
 Wants=network-online.target
 

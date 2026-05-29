@@ -1,29 +1,38 @@
 ---
-name: global-airfare-intelligence
+name: coming-to-colombia-bot
 description: >
-  Build, clone, configure, deploy, and monetize an OpsHub Global Airfare
-  Intelligence System — a config-driven Telegram airfare bot that tracks
-  cheap one-way flights for ANY origin/destination market via a YAML
-  region pack, compares direct vs gateway-positioning routes, grades
-  deals GREEN/YELLOW/RED, and runs live on RapidAPI Skyscanner. TRIGGER
-  when the user wants a worldwide/global airfare bot, wants to clone the
-  airfare radar to a new country/region, or wants to deploy or monetize
+  Build, clone, configure, deploy, and monetize the Coming to Colombia
+  Bot — a Telegram airfare-and-intelligence desk for travelers heading
+  from the US to Colombia, powered by a config-driven worldwide
+  airfare framework that tracks cheap one-way flights for ANY
+  origin/destination market via a YAML region pack, compares direct
+  vs gateway-positioning routes, grades deals GREEN/YELLOW/RED, and
+  runs live on RapidAPI Skyscanner. TRIGGER when the user wants the
+  Coming to Colombia Bot, wants to clone it to a new country desk,
+  wants a worldwide/global airfare bot, or wants to deploy or monetize
   an airfare deal channel. Flights only.
 ---
 
-# Global Airfare Intelligence — Super Skill
+# Coming to Colombia Bot — Super Skill
 
 ## Skill name
 
-`global-airfare-intelligence`
+`coming-to-colombia-bot`
+
+> Folder note: this skill currently lives at
+> `skills/global_airfare_intelligence_skill/` for historical reasons
+> (the framework was built before the desk identity). The folder rename
+> to `skills/coming_to_colombia_bot_skill/` is tracked in
+> `docs/REPO_RENAME_EXECUTION_REPORT.md` as a follow-up.
 
 ## Mission
 
-Turn the verified BWI → Colombia airfare bot into — and operate it as —
-a **reusable worldwide airfare intelligence platform**. One config-driven
-engine; every market (country, region, city group, travel style) is a
-swappable YAML region pack. Clone it for any origin/destination, deploy
-it to a VPS, and run paid airfare-alert channels on top of it.
+Operate the verified BWI → Colombia airfare bot as the **Coming to
+Colombia Desk**, and reuse the same engine as a **config-driven
+worldwide airfare platform**. One config-driven engine; every market
+(country, region, city group, travel style) is a swappable YAML region
+pack. Clone it for any origin/destination, deploy it to a VPS, and run
+paid airfare-alert channels on top of it.
 
 ## When to use this skill
 
@@ -85,10 +94,10 @@ this foundation build; ⏳ items arrive in the documentation phase.
 ## Maintenance commands
 
 ```bash
-python tests/test_smoke.py                  # verify the build
-python main.py                              # run locally
-sudo systemctl restart airfare-intelligence # restart on a VPS
-journalctl -u airfare-intelligence -f       # follow logs
+python tests/test_smoke.py                       # verify the build
+python main.py                                   # run locally
+sudo systemctl restart coming-to-colombia-bot    # restart on a VPS
+journalctl -u coming-to-colombia-bot -f          # follow logs
 ```
 
 ## Guardrails

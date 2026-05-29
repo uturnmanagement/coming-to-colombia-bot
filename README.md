@@ -1,15 +1,19 @@
-# OpsHub Global Airfare Intelligence System
+# Coming to Colombia Bot
 
-A reusable, **config-driven worldwide airfare intelligence framework**.
-Point it at *any* origin airport and destination region with a single
-YAML region pack, and it tracks cheap one-way flights, compares direct
-routes against gateway-positioning routes, grades every deal
-**GREEN / YELLOW / RED**, and pushes alerts to a Telegram channel.
+The **Coming to Colombia Bot** is a Telegram airfare-and-intelligence
+desk for travelers heading from the US to Colombia. Under the hood it
+runs a **config-driven worldwide airfare framework** — point it at any
+origin airport and destination region via a single YAML region pack,
+and it tracks cheap one-way flights, compares direct routes against
+gateway-positioning routes, grades every deal **GREEN / YELLOW / RED**,
+and pushes alerts to a Telegram channel.
 
 > Evolved from a verified, live BWI → Colombia deployment (live
 > Skyscanner fares, positioning engine, urgency scoring, async retry —
-> all confirmed in production). That deployment is now just one region
-> pack: `configs/colombia.yaml`.
+> all confirmed in production). The active desk identity is
+> **Coming to Colombia Desk**; the live region pack is
+> `configs/colombia.yaml`. The other 8 region packs ship as a reusable
+> framework for future country desks.
 
 ---
 
@@ -114,7 +118,7 @@ continuous multi-region operation, use a paid API tier or stagger scans.
 ## Project structure
 
 ```
-opshub_global_airfare_intelligence_system/
+coming-to-colombia-bot/
 ├── main.py                  # entry point
 ├── src/                     # config-driven engine
 │   ├── region.py            # region pack model + loader (the core)
@@ -140,7 +144,7 @@ opshub_global_airfare_intelligence_system/
 ## Quick start
 
 ```powershell
-cd opshub_global_airfare_intelligence_system
+cd coming-to-colombia-bot
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
@@ -150,7 +154,9 @@ python main.py
 ```
 
 Pick a market by setting `REGION_PACK` in `.env` (e.g. `japan`). See
-`skills/global_airfare_intelligence_skill/QUICKSTART.md`.
+`skills/global_airfare_intelligence_skill/QUICKSTART.md` (legacy skill
+folder name; the contents are part of the Coming to Colombia Bot
+super-skill).
 
 ---
 
@@ -159,8 +165,8 @@ Pick a market by setting `REGION_PACK` in `.env` (e.g. `japan`). See
 ```powershell
 git init
 git add -A
-git commit -m "Initial global airfare intelligence framework"
-git remote add origin https://github.com/<you>/opshub_global_airfare_intelligence_system.git
+git commit -m "Initial Coming to Colombia Bot"
+git remote add origin https://github.com/<you>/coming-to-colombia-bot.git
 git branch -M main
 git push -u origin main
 ```
@@ -179,9 +185,11 @@ per region pack. See `deployment/` and the skill's `VPS_DEPLOYMENT.md`,
 
 ## The reusable super skill
 
-`skills/global_airfare_intelligence_skill/` is a Claude Code skill that
-documents how to clone, configure, deploy, and monetize the framework —
-see `SKILL.md` for the index.
+`skills/global_airfare_intelligence_skill/` (folder name kept from the
+framework's L0 origin; pending rename — see
+`docs/REPO_RENAME_EXECUTION_REPORT.md`) is a Claude Code skill that
+documents how to clone, configure, deploy, and monetize the Coming to
+Colombia Bot — see `SKILL.md` for the index.
 
 ---
 

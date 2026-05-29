@@ -4,13 +4,17 @@
 **Date:** 2026-05-26
 **Status:** Layer 1 complete. Awaiting approval before Layer 2.
 
-> Working directory note: the repo lives on disk at
+> Working directory note: at Layer 1 the repo lived on disk at
 > `C:\Users\uturn\opshub_global_airfare_intelligence_system\`. The
 > directory and GitHub-remote rename to `coming-to-colombia-bot` was
-> deferred from the migration plan and is **not** part of this layer.
+> deferred from the migration plan and was **not** part of this layer.
 > All new code uses the post-rename naming conventions internally
 > (`colombia_desk.*` loggers, "Colombia Desk" in messages, `Oak Street`
-> in code) so no rework will be needed when the rename executes.
+> in code) so no rework was needed at rename time. The in-repo rebrand
+> (README, docs, configs, systemd template) was executed 2026-05-29 on
+> branch `repo-rename-coming-to-colombia-bot`. The Windows folder
+> rename + GitHub repo rename are tracked in
+> `docs/REPO_RENAME_EXECUTION_REPORT.md`.
 
 ---
 
