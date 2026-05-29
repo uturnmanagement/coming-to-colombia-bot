@@ -48,6 +48,11 @@ VERDICT_KEYS = {
     "price_position_label",    # Echo  (e.g. "great", "good", "normal")
     "price_position_pct",      # Echo  (0..100; lower = cheaper)
     "lodging_signal",          # Echo  (reserved — None in Layer 3)
+    # --- Layer 5: India (hostel + budget accommodation) ---
+    "best_hostel_score",       # India (0..100; higher = better)
+    "best_hostel_category",    # India (AccommodationCategory.value)
+    "best_hostel_price_usd",   # India (USD/night)
+    "hostel_options_count",    # India (int — total options considered)
 }
 
 
