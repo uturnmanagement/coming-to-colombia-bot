@@ -47,3 +47,38 @@ CREATE TABLE IF NOT EXISTS specialist_reports (
 
 CREATE INDEX IF NOT EXISTS idx_specialist_lookup
     ON specialist_reports(specialist, deal_id, report_at);
+
+-- Layer 4 — Lodging Price Intelligence.
+-- lodging_baseline holds the rolling typical-price for one
+-- (city, neighborhood, beds) tuple. lodging_history is the raw
+-- observation log every provider feeds into.
+CREATE TABLE IF NOT EXISTS lodging_baseline (
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+    city               TEXT    NOT NULL,
+    neighborhood       TEXT,
+    beds               INTEGER,
+    baseline_price_usd REAL    NOT NULL,
+    sample_size        INTEGER NOT NULL,
+    lookback_days      INTEGER NOT NULL,
+    computed_at        TEXT    NOT NULL,
+    source_set         TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_lodging_baseline_lookup
+    ON lodging_baseline(city, neighborhood, beds, computed_at);
+
+CREATE TABLE IF NOT EXISTS lodging_history (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    city            TEXT    NOT NULL,
+    neighborhood    TEXT,
+    beds            INTEGER,
+    observed_at     TEXT    NOT NULL,
+    stay_date       TEXT    NOT NULL,
+    price_usd       REAL    NOT NULL,
+    source          TEXT    NOT NULL,
+    listing_ref     TEXT,
+    raw_json        TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_lodging_history_lookup
+    ON lodging_history(city, neighborhood, beds, observed_at);

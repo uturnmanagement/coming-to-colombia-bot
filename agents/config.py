@@ -48,6 +48,10 @@ class DeskConfig:
     no-op (or re-routes through Oak Street's dispatcher if Oak Street is
     wired into bot_data). This is the seam Layer 2 uses to migrate from
     the legacy direct-send model to the centralized dispatcher.
+
+    Layer 4 adds lodging intelligence configuration. Defaults keep the
+    brain enabled but with only the mock provider active — AirDNA and
+    Inside Airbnb providers remain stubs until explicitly enabled.
     """
     dry_run: bool
     scanner_telegram_enabled: bool
@@ -58,6 +62,14 @@ class DeskConfig:
     telegram_chat_id: str
     log_level: str
     live_send_cooldown_seconds: int
+    # --- Layer 4: lodging intel ---
+    lodging_intel_enabled: bool
+    airdna_api_key: str
+    inside_airbnb_local_path: str
+    lodging_yellow_threshold_pct: float
+    lodging_red_threshold_pct: float
+    lodging_season_weighting: bool
+    lodging_baseline_lookback_days: int
 
     @property
     def telegram_ready(self) -> bool:
@@ -80,4 +92,16 @@ def load_desk_config() -> DeskConfig:
         telegram_chat_id=_env("TELEGRAM_CHAT_ID"),
         log_level=_env("LOG_LEVEL", "INFO").upper(),
         live_send_cooldown_seconds=int(_env("LIVE_SEND_COOLDOWN_SECONDS", "60")),
+        # --- Layer 4 lodging intel ---
+        lodging_intel_enabled=_env_bool("LODGING_INTEL_ENABLED", default=True),
+        airdna_api_key=_env("AIRDNA_API_KEY"),
+        inside_airbnb_local_path=_env(
+            "INSIDE_AIRBNB_LOCAL_PATH", "/data/insideairbnb"
+        ),
+        lodging_yellow_threshold_pct=float(_env("LODGING_YELLOW_THRESHOLD", "8")),
+        lodging_red_threshold_pct=float(_env("LODGING_RED_THRESHOLD", "15")),
+        lodging_season_weighting=_env_bool("LODGING_SEASON_WEIGHTING", default=True),
+        lodging_baseline_lookback_days=int(
+            _env("LODGING_BASELINE_LOOKBACK_DAYS", "90")
+        ),
     )
