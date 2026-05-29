@@ -27,7 +27,11 @@ from .report import (
     HostelReport,
     HostelSignal,
 )
-from .scoring import ScoreBreakdown, score_option
+from .scoring import (
+    ScoreBreakdown,
+    load_category_typicals_from_env,
+    score_option,
+)
 
 log = get_logger("india")
 
@@ -42,7 +46,15 @@ class India:
     # the city-wide lodging color.
     lodging_service: Optional[object] = None
     # Per-category typical-price override; None uses the module defaults.
+    # When left None, Layer 6 attempts a config-driven table from the
+    # INDIA_TYPICAL_PRICES_JSON env file; an unset/invalid env still
+    # leaves this None so the scoring module's defaults apply (the exact
+    # Layer 5 behavior).
     typical_prices: Optional[dict[AccommodationCategory, float]] = None
+
+    def __post_init__(self) -> None:
+        if self.typical_prices is None:
+            self.typical_prices = load_category_typicals_from_env()
 
     def analyze(
         self,

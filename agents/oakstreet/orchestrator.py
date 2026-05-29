@@ -237,11 +237,14 @@ class OakStreet:
         echo = reports.get("echo")
         if echo is not None:
             sections.append(self._render_echo_section(echo))
+        india = reports.get("india")
+        if india is not None:
+            sections.append(self._render_india_section(india))
 
-        # Unknown specialists (future India / Juliet / etc.) appear after
-        # the named ones, in deterministic order.
+        # Unknown specialists (future Juliet / etc.) appear after the
+        # named ones, in deterministic order.
         for name in sorted(reports):
-            if name in ("delta", "echo"):
+            if name in ("delta", "echo", "india"):
                 continue
             sections.append(
                 f"<b>{name.upper()}</b> — status={reports[name].status.value} "
@@ -333,8 +336,47 @@ class OakStreet:
             if isinstance(typical, (int, float))
             else f"  label: {label}",
         ]
-        if payload.get("lodging_signal") is None:
-            lines.append("  lodging signal: <i>reserved for Layer 4</i>")
+        lodging = payload.get("lodging_signal")
+        if lodging is None:
+            lines.append("  lodging signal: <i>not available</i>")
+        else:
+            lines.append(
+                f"  lodging signal: {str(lodging.get('color', '?')).upper()} "
+                f"({lodging.get('weighted_pct_below', 0.0):.1f}% below typical, "
+                f"n={lodging.get('sample_size', 0)})"
+            )
+        for flag in report.flags:
+            lines.append(f"  flag: {flag}")
+        return "\n".join(lines)
+
+    def _render_india_section(self, report) -> str:
+        """Dedicated INDIA section (Layer 6).
+
+        Replaces the generic unknown-specialist fall-through line so the
+        briefing surfaces the best hostel/budget option directly. Handles
+        a report with no signal (no options / future-hook payload) and
+        always echoes the status so prior callers still see 'stub'.
+        """
+        lines = [
+            f"<b>INDIA · hostels and budget stays</b> "
+            f"({report.status.value}, conf {report.confidence:.2f})"
+        ]
+        signal = report.payload.get("signal")
+        if not signal:
+            lines.append("  no scored options for city")
+        else:
+            price = signal.get("best_price_usd")
+            score = signal.get("best_score")
+            price_str = f"${price:.0f}/night" if isinstance(price, (int, float)) else "?"
+            score_str = f"score {score:.1f}" if isinstance(score, (int, float)) else ""
+            lines.append(
+                f"  best: {signal.get('best_option_name', '?')} "
+                f"({signal.get('best_category', '?')}) {price_str} {score_str}".rstrip()
+            )
+            lines.append(f"  options considered: {signal.get('options_count', 0)}")
+            city_color = signal.get("lodging_color")
+            if city_color:
+                lines.append(f"  city lodging signal: {str(city_color).upper()}")
         for flag in report.flags:
             lines.append(f"  flag: {flag}")
         return "\n".join(lines)

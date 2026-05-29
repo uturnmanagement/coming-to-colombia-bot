@@ -55,6 +55,27 @@ class LodgingSignal:
     sample_size: int
     on_date: date
 
+    def as_verdict_dict(self) -> dict:
+        """Compact, JSON-serializable projection for a specialist's
+        ``verdict_input['lodging_signal']`` slot.
+
+        The SpecialistReport contract requires every ``verdict_input``
+        value to survive ``json.dumps`` (the schema is transported and
+        audited as JSON). LodgingSignal itself carries enums and a
+        ``date``, so consumers (Layer 6 Echo) drop in this dict instead
+        of the dataclass.
+        """
+        return {
+            "color": self.color.value,
+            "weighted_pct_below": self.weighted_pct_below,
+            "raw_pct_below": self.raw_pct_below,
+            "baseline_price_usd": self.baseline_price_usd,
+            "observed_price_usd": self.observed_price_usd,
+            "season": self.season.value,
+            "sample_size": self.sample_size,
+            "on_date": self.on_date.isoformat(),
+        }
+
 
 @dataclass
 class LodgingIntelService:

@@ -12,13 +12,18 @@ All inputs are pure values; the engine never reads I/O.
 """
 from __future__ import annotations
 
+import json
+import os
 from dataclasses import dataclass
 from typing import Optional
 
+from agents.logging_setup import get_logger
 from intel.lodging.scoring import LodgingColor
 from intel.lodging.seasons import Season
 
 from .report import AccommodationCategory
+
+log = get_logger("india")
 
 
 # Per-category typical USD/night used as the price-score anchor.
@@ -30,6 +35,52 @@ TYPICAL_PRICE_USD_BY_CATEGORY: dict[AccommodationCategory, float] = {
     AccommodationCategory.BUDGET_HOTEL: 50.0,
     AccommodationCategory.GUEST_HOUSE: 40.0,
 }
+
+
+# Env knob (Layer 6 / O3): a path to a JSON object mapping
+# AccommodationCategory.value -> typical USD/night, e.g.
+#   {"hostel_dorm": 18, "budget_hotel": 55}
+# Keys not recognized are ignored; a missing/unreadable/invalid file
+# degrades quietly to None so the module defaults stay in force.
+TYPICAL_PRICES_ENV_VAR = "INDIA_TYPICAL_PRICES_JSON"
+
+
+def load_category_typicals_from_env(
+    env: Optional[dict] = None,
+) -> Optional[dict[AccommodationCategory, float]]:
+    """Best-effort load of a per-category typical-price table from the
+    JSON file named by ``INDIA_TYPICAL_PRICES_JSON``.
+
+    Returns None when the env var is unset OR the file is missing /
+    unreadable / malformed — callers then fall back to
+    ``TYPICAL_PRICE_USD_BY_CATEGORY``. Never raises.
+    """
+    source = (env if env is not None else os.environ).get(TYPICAL_PRICES_ENV_VAR)
+    if not source:
+        return None
+    try:
+        with open(source, "r", encoding="utf-8") as fh:
+            raw = json.load(fh)
+    except Exception:  # noqa: BLE001 — config absence is not an error
+        log.warning("could not read %s=%s; using default typicals",
+                    TYPICAL_PRICES_ENV_VAR, source)
+        return None
+    if not isinstance(raw, dict):
+        log.warning("%s did not contain a JSON object; ignoring", source)
+        return None
+    by_value = {c.value: c for c in AccommodationCategory}
+    table: dict[AccommodationCategory, float] = {}
+    for key, val in raw.items():
+        cat = by_value.get(str(key).lower())
+        if cat is None:
+            continue
+        try:
+            price = float(val)
+        except (TypeError, ValueError):
+            continue
+        if price > 0:
+            table[cat] = price
+    return table or None
 
 # Score weights — must sum to 1.0. Adjust together if rebalancing.
 SCORE_WEIGHTS: dict[str, float] = {
