@@ -17,11 +17,46 @@ from typing import Callable, Optional
 from .windows import RETURN_WINDOWS_DAYS, generate_windows
 
 
+@dataclass(frozen=True)
+class ReturnLegQuote:
+    """A priced return leg with whatever real itinerary detail the source
+    supplied. A fetcher MAY still return a bare ``float`` (legacy /
+    placeholder) — ``estimate_pairing`` normalizes both. Fields that the
+    provider does not return stay empty; they are never synthesized.
+    """
+    price_usd: float
+    airline: str = ""
+    stops: int = 0
+    depart_iso: Optional[str] = None
+    arrive_iso: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    booking_url: str = ""
+    source: str = ""                      # "live" | "placeholder"
+    flight_numbers: tuple[str, ...] = ()  # empty unless provider supplies
+    connections: tuple[str, ...] = ()
+    cabin: Optional[str] = None
+
+
 # A return-leg fetcher takes (origin, destination, return_date) where
 # origin/destination are the *return* directions (so the inbound's
-# original destination is now the fetcher's origin). It returns either
-# a USD estimate or None when no data is available.
-ReturnLegFetcher = Callable[[str, str, date], Optional[float]]
+# original destination is now the fetcher's origin). It returns either a
+# USD float, a ReturnLegQuote, or None when no data is available.
+ReturnLegFetcher = Callable[[str, str, date], Optional[object]]
+
+
+def _normalize_quote(value: object) -> Optional[ReturnLegQuote]:
+    """Coerce a fetcher result into a ReturnLegQuote (or None).
+
+    Accepts a ReturnLegQuote as-is, wraps a number into a price-only quote
+    (legacy float fetchers), and treats anything else / None as no data.
+    """
+    if value is None:
+        return None
+    if isinstance(value, ReturnLegQuote):
+        return value
+    if isinstance(value, (int, float)):
+        return ReturnLegQuote(price_usd=float(value))
+    return None
 
 
 @dataclass(frozen=True)
@@ -31,6 +66,18 @@ class ReturnOption:
     return_price_usd: Optional[float]
     round_trip_total_usd: Optional[float]
     confidence: float           # 0..1 — degrades when data is missing
+    # --- Stage 2 enrichment (defaults keep older callers/tests valid) ---
+    airline: str = ""
+    stops: int = 0
+    depart_iso: Optional[str] = None
+    arrive_iso: Optional[str] = None
+    duration_minutes: Optional[int] = None
+    booking_url: str = ""
+    source: str = ""
+    flight_numbers: tuple[str, ...] = ()
+    connections: tuple[str, ...] = ()
+    cabin: Optional[str] = None
+    color: Optional[str] = None  # assigned by the ranking pass (RED/YELLOW/GREEN)
 
 
 @dataclass(frozen=True)
@@ -63,8 +110,8 @@ def estimate_pairing(
     options: list[ReturnOption] = []
     for days, return_date in generate_windows(outbound_depart, windows=windows):
         # Note the swap: returning is destination -> origin.
-        price = fetcher(destination, origin, return_date)
-        if price is None:
+        quote = _normalize_quote(fetcher(destination, origin, return_date))
+        if quote is None:
             options.append(ReturnOption(
                 window_days=days,
                 return_date=return_date,
@@ -73,13 +120,23 @@ def estimate_pairing(
                 confidence=0.0,
             ))
             continue
-        total = round(outbound_price_usd + price, 2)
+        total = round(outbound_price_usd + quote.price_usd, 2)
         options.append(ReturnOption(
             window_days=days,
             return_date=return_date,
-            return_price_usd=round(price, 2),
+            return_price_usd=round(quote.price_usd, 2),
             round_trip_total_usd=total,
             confidence=1.0,
+            airline=quote.airline,
+            stops=quote.stops,
+            depart_iso=quote.depart_iso,
+            arrive_iso=quote.arrive_iso,
+            duration_minutes=quote.duration_minutes,
+            booking_url=quote.booking_url,
+            source=quote.source,
+            flight_numbers=quote.flight_numbers,
+            connections=quote.connections,
+            cabin=quote.cabin,
         ))
     return PairingEstimate(
         origin=origin,

@@ -19,19 +19,39 @@ from .windows import (
 from .pairing import (
     PairingEstimate,
     ReturnLegFetcher,
+    ReturnLegQuote,
     ReturnOption,
     estimate_pairing,
+)
+from .ranking import (
+    RankedReturns,
+    classify_returns,
+    rank_returns,
+)
+from .combo import (
+    COMBO_CATEGORIES,
+    QUALIFYING_COLORS,
+    combo_color,
+    qualifies,
 )
 
 __all__ = [
     "RETURN_WINDOWS_DAYS",
     "ReturnWindowMode",
     "ReturnLegFetcher",
+    "ReturnLegQuote",
     "ReturnOption",
     "PairingEstimate",
+    "RankedReturns",
     "generate_windows",
     "parse_fixed_list",
     "range_windows",
     "resolve_return_windows",
     "estimate_pairing",
+    "classify_returns",
+    "rank_returns",
+    "combo_color",
+    "qualifies",
+    "COMBO_CATEGORIES",
+    "QUALIFYING_COLORS",
 ]

@@ -1,12 +1,27 @@
 """Delta — Return Pairing specialist.
 
-Layer 3 ships Delta as a foundation:
+Stage 2 upgrades Delta into a live return-flight optimizer:
     - Pure return-window math + pairing engine in intel/return_pairing.
+    - Coloring + ranking in intel/return_pairing/ranking.
     - Specialist shell here takes an outbound observation and emits a
-      SpecialistReport for Oak Street.
-    - No live API calls. A placeholder fetcher serves heuristic prices.
-      Live fetching is Layer 4+ work.
+      SpecialistReport carrying full per-window itinerary detail.
+    - Live fetching reuses the verified scanner LiveFlightFetcher, gated
+      behind DELTA_LIVE_RETURNS (default off → offline placeholder).
 """
-from .specialist import Delta, placeholder_return_fetcher
+from .specialist import (
+    Delta,
+    make_live_return_fetcher,
+    make_placeholder_offer_fetcher,
+    placeholder_return_fetcher,
+    sampled_return_days,
+)
+from .report import render_delta_report
 
-__all__ = ["Delta", "placeholder_return_fetcher"]
+__all__ = [
+    "Delta",
+    "make_live_return_fetcher",
+    "make_placeholder_offer_fetcher",
+    "placeholder_return_fetcher",
+    "sampled_return_days",
+    "render_delta_report",
+]

@@ -66,26 +66,28 @@ def test_first_alert_registers_and_sends():
 def test_rate_limited_observation_suppresses():
     oak, db, disp = _setup()
     oak.ingest_alert(_evt(first=True))
-    # 10 minutes later — under ACTIVE 15-min interval, even with a
-    # qualifying price jump.
+    # 10 minutes later — under the RED 3-hour cadence. A price *increase*
+    # is not a reactivation, so the heartbeat is rate-limited.
     decision = oak.ingest_alert(_evt(price=400, age_h=10/60))
     assert decision is not None
     assert decision.should_emit is False
     assert len(disp.outbox) == 1, "no heartbeat should be emitted"
 
 
-def test_material_change_after_interval_emits_heartbeat():
+def test_red_cadence_heartbeat_emits_after_3h():
+    """Phase 2.8: an unchanged RED deal re-observed >= 3h later emits a
+    cadence keep-alive (color policy supersedes the old 15-min stage)."""
     oak, db, disp = _setup()
     oak.ingest_alert(_evt(first=True))
-    # 20 min later, $20 drop -> beyond ACTIVE 15-min interval.
-    decision = oak.ingest_alert(_evt(price=270, age_h=20/60))
+    # Same price/route/color 3h later -> RED 3-hour cadence keep-alive.
+    decision = oak.ingest_alert(_evt(age_h=3.0))
     assert decision is not None and decision.should_emit is True
     assert disp.outbox[-1].kind == "heartbeat"
     row = db.get_deal("d1")
     assert row["heartbeat_count"] == 1
     snaps = db.snapshots_for("d1")
     assert len(snaps) == 1
-    assert snaps[0]["trigger_reason"].startswith("material change")
+    assert "cadence" in snaps[0]["trigger_reason"]
 
 
 def test_zombie_mutes():

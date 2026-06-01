@@ -12,7 +12,7 @@ Boundary rules (enforced by code structure, not just convention):
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Optional
 
@@ -23,6 +23,7 @@ from intel.heartbeat import (
     HeartbeatDecision,
     HeartbeatStage,
     decide_heartbeat,
+    decide_policy_heartbeat,
 )
 from links.telegram_dispatcher import TelegramDispatcher
 
@@ -116,6 +117,27 @@ class OakStreet:
             first_alert_at=first_alert_at,
             last_heartbeat_at=last_heartbeat_at,
             now=event.observed_at,
+        )
+
+        # Phase 2.8: the color-driven policy is the authoritative governor
+        # of whether a follow-up heartbeat actually emits (RED every 3h /
+        # max 16, YELLOW every 12h / max 4, GREEN never, hard stop at 48h,
+        # reactivation on new info). The decay engine above is retained for
+        # its stage label and zombie status — it no longer vetoes the emit,
+        # since the policy's fixed per-color cadence is itself the keep-alive
+        # and must fire even when the decay stage's longer interval would
+        # otherwise rate-limit it.
+        policy = decide_policy_heartbeat(
+            color=event.color,
+            previous=previous,
+            current=current,
+            first_alert_at=first_alert_at,
+            last_heartbeat_at=last_heartbeat_at,
+            now=event.observed_at,
+            heartbeat_count=int(deal_row.get("heartbeat_count") or 0),
+        )
+        decision = replace(
+            decision, should_emit=policy.should_emit, reason=policy.reason,
         )
 
         if decision.stage is HeartbeatStage.ZOMBIE:
@@ -314,6 +336,22 @@ class OakStreet:
                 f"${best['round_trip_total_usd']:.0f} round-trip "
                 f"(return {best['return_date']})"
             )
+            # Phase 2.7: round-trip combo (both legs >= YELLOW).
+            qcount = report.payload.get("qualifying_count", 0)
+            bq = report.payload.get("best_qualifying")
+            if bq is not None:
+                savings = bq.get("savings_vs_typical_usd")
+                savings_str = (
+                    f", {'+' if savings >= 0 else '-'}${abs(savings):.0f} vs typical"
+                    if isinstance(savings, (int, float)) else ""
+                )
+                lines.append(
+                    f"  combo: {bq.get('combo_color')} ✅ "
+                    f"({qcount} qualifying) — {bq['window_days']}d "
+                    f"${bq['round_trip_total_usd']:.0f}{savings_str}"
+                )
+            else:
+                lines.append(f"  combo: none qualifying ({qcount}) — needs both legs ≥ YELLOW")
             for o in options:
                 if o["round_trip_total_usd"] is None:
                     lines.append(f"  {o['window_days']:>3}d: —")

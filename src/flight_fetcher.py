@@ -34,10 +34,31 @@ class FlightOffer:
     arrive_dt: datetime
     airline: str
     stops: int
+    # Stage 2 real-field capture. All optional with safe defaults so every
+    # existing construction site and the outbound scanner behave bit-for-bit.
+    duration_minutes: int | None = None   # authoritative leg duration (API)
+    booking_url: str = ""                 # itinerary deep link (real)
+    source: str = ""                      # provenance: "live" | "placeholder"
+    # Segment-level detail. Only populated by providers that actually return
+    # it (Amadeus). Skyscanner searchFlights does NOT, so these stay empty
+    # and the renderer prints "not provided by source". NEVER synthesized.
+    flight_numbers: tuple[str, ...] = ()
+    connections: tuple[str, ...] = ()
 
     @property
     def duration_hours(self) -> float:
+        if self.duration_minutes is not None:
+            return self.duration_minutes / 60.0
         return (self.arrive_dt - self.depart_dt).total_seconds() / 3600.0
+
+    @property
+    def route_type(self) -> str:
+        """direct | one stop | N stops — derived from stop count only."""
+        if self.stops <= 0:
+            return "direct"
+        if self.stops == 1:
+            return "one stop"
+        return f"{self.stops} stops"
 
     def as_dict(self) -> dict:
         return {
@@ -49,6 +70,11 @@ class FlightOffer:
             "airline": self.airline,
             "stops": self.stops,
             "duration_hours": round(self.duration_hours, 1),
+            "duration_minutes": self.duration_minutes,
+            "booking_url": self.booking_url,
+            "source": self.source,
+            "flight_numbers": list(self.flight_numbers),
+            "connections": list(self.connections),
         }
 
 
@@ -125,6 +151,10 @@ class PlaceholderFlightFetcher(FlightFetcher):
                     arrive_dt=arrive,
                     airline=rng.choice(_AIRLINES),
                     stops=1 if is_longhaul else 0,
+                    duration_minutes=int(round(duration * 60)),
+                    source="placeholder",
+                    # No flight numbers / connections — placeholder must never
+                    # masquerade as real itinerary detail.
                 )
             )
         return offers
@@ -150,6 +180,21 @@ RAPIDAPI_SEARCH_FLIGHTS_PATH = "/flights/searchFlights"
 RAPIDAPI_SEARCH_AIRPORT_PATH = "/flights/searchAirport"
 
 
+def _iso8601_duration_to_minutes(text: str) -> int | None:
+    """Parse an ISO-8601 duration like 'PT8H35M' into total minutes.
+
+    Returns None on any unexpected shape (caller treats as 'unknown').
+    """
+    import re
+
+    m = re.fullmatch(r"PT(?:(\d+)H)?(?:(\d+)M)?", text.strip())
+    if not m or (m.group(1) is None and m.group(2) is None):
+        return None
+    hours = int(m.group(1) or 0)
+    minutes = int(m.group(2) or 0)
+    return hours * 60 + minutes
+
+
 def _parse_amadeus_offer(raw: dict) -> FlightOffer | None:
     """Translate one Amadeus flight-offer object into a FlightOffer."""
     try:
@@ -162,6 +207,19 @@ def _parse_amadeus_offer(raw: dict) -> FlightOffer | None:
         carrier = (
             (raw.get("validatingAirlineCodes") or [first.get("carrierCode", "")])[0]
         )
+        # Amadeus DOES return per-segment detail — capture real flight numbers
+        # and intermediate (connection) airports. Empty when absent; never faked.
+        flight_numbers = tuple(
+            f"{s.get('carrierCode', '')}{s.get('number', '')}"
+            for s in segments if s.get("number")
+        )
+        connections = tuple(
+            s["arrival"]["iataCode"] for s in segments[:-1]
+        )
+        duration_minutes = None
+        dur_raw = raw["itineraries"][0].get("duration")  # ISO-8601 e.g. PT8H35M
+        if isinstance(dur_raw, str):
+            duration_minutes = _iso8601_duration_to_minutes(dur_raw)
         return FlightOffer(
             origin=first["departure"]["iataCode"],
             destination=last["arrival"]["iataCode"],
@@ -170,6 +228,10 @@ def _parse_amadeus_offer(raw: dict) -> FlightOffer | None:
             arrive_dt=arrive_dt,
             airline=_CARRIER_NAMES.get(carrier, carrier or "Unknown"),
             stops=len(segments) - 1,
+            duration_minutes=duration_minutes,
+            source="live",
+            flight_numbers=flight_numbers,
+            connections=connections,
         )
     except (KeyError, IndexError, ValueError, TypeError):
         return None
@@ -192,6 +254,9 @@ def _parse_skyscanner_itinerary(
         arrive_dt = datetime.fromisoformat(leg["arrival"])
         carriers = leg.get("carriers") or []
         airline = carriers[0]["name"] if carriers else "Unknown"
+        # This endpoint (verified by live probe) returns leg-summary only:
+        # NO `segments`, so flight numbers / connection airports / layover
+        # are genuinely absent and are left empty — never synthesized.
         return FlightOffer(
             origin=str(leg.get("origin") or origin).upper(),
             destination=str(leg.get("destination") or destination).upper(),
@@ -200,6 +265,9 @@ def _parse_skyscanner_itinerary(
             arrive_dt=arrive_dt,
             airline=airline,
             stops=int(leg.get("stopCount", 0)),
+            duration_minutes=leg.get("durationMinutes"),
+            booking_url=str(raw.get("bookingUrl", "")),
+            source="live",
         )
     except (KeyError, IndexError, ValueError, TypeError):
         return None
