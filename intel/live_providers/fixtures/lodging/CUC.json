@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "CUC",
+    "city_name": "Cúcuta",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "CUC",
+      "price_usd": 9.4,
+      "beds": 1,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CUC-1"
+    },
+    {
+      "city": "CUC",
+      "price_usd": 24.5,
+      "beds": 2,
+      "neighborhood": "Caobos",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CUC-2"
+    },
+    {
+      "city": "CUC",
+      "price_usd": 35.6,
+      "beds": 2,
+      "neighborhood": "La Riviera",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CUC-3"
+    },
+    {
+      "city": "CUC",
+      "price_usd": 42.35,
+      "beds": 3,
+      "neighborhood": "Quinta Oriental",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CUC-4"
+    }
+  ]
+}

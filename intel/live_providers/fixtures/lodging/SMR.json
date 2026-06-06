@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "SMR",
+    "city_name": "Santa Marta",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "SMR",
+      "price_usd": 11.75,
+      "beds": 1,
+      "neighborhood": "Centro Histórico",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-SMR-1"
+    },
+    {
+      "city": "SMR",
+      "price_usd": 29.4,
+      "beds": 2,
+      "neighborhood": "El Rodadero",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-SMR-2"
+    },
+    {
+      "city": "SMR",
+      "price_usd": 41.0,
+      "beds": 2,
+      "neighborhood": "Taganga",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-SMR-3"
+    },
+    {
+      "city": "SMR",
+      "price_usd": 52.1,
+      "beds": 3,
+      "neighborhood": "Bello Horizonte",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-SMR-4"
+    }
+  ]
+}

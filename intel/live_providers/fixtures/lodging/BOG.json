@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "BOG",
+    "city_name": "Bogotá",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "BOG",
+      "price_usd": 14.1,
+      "beds": 1,
+      "neighborhood": "La Candelaria",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BOG-1"
+    },
+    {
+      "city": "BOG",
+      "price_usd": 37.2,
+      "beds": 2,
+      "neighborhood": "Chapinero",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BOG-2"
+    },
+    {
+      "city": "BOG",
+      "price_usd": 53.0,
+      "beds": 2,
+      "neighborhood": "Usaquén",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BOG-3"
+    },
+    {
+      "city": "BOG",
+      "price_usd": 65.4,
+      "beds": 3,
+      "neighborhood": "Teusaquillo",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BOG-4"
+    }
+  ]
+}

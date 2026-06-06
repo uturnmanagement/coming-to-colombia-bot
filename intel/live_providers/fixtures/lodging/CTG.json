@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "CTG",
+    "city_name": "Cartagena",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "CTG",
+      "price_usd": 17.45,
+      "beds": 1,
+      "neighborhood": "Getsemaní",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CTG-1"
+    },
+    {
+      "city": "CTG",
+      "price_usd": 45.65,
+      "beds": 2,
+      "neighborhood": "Centro Histórico",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CTG-2"
+    },
+    {
+      "city": "CTG",
+      "price_usd": 70.0,
+      "beds": 2,
+      "neighborhood": "Bocagrande",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CTG-3"
+    },
+    {
+      "city": "CTG",
+      "price_usd": 84.25,
+      "beds": 3,
+      "neighborhood": "Manga",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-CTG-4"
+    }
+  ]
+}

@@ -16,6 +16,12 @@ from .base import (
     ProviderTimeout,
     ProviderTransportError,
 )
+from .fixture_transport import (
+    FIXTURE_API_KEY,
+    FIXTURES_DIR,
+    FixtureLodgingTransport,
+    make_fixture_lodging_provider,
+)
 from .lodging import LodgingQuote, LiveLodgingProvider, make_live_lodging_provider
 from .mock import make_mock_airfare_provider, make_mock_lodging_provider
 from .selection import build_airfare_provider, build_lodging_provider
@@ -36,6 +42,10 @@ __all__ = [
     "make_live_lodging_provider",
     "make_mock_airfare_provider",
     "make_mock_lodging_provider",
+    "make_fixture_lodging_provider",
+    "FixtureLodgingTransport",
+    "FIXTURES_DIR",
+    "FIXTURE_API_KEY",
     "build_airfare_provider",
     "build_lodging_provider",
     "InjectableTransport",

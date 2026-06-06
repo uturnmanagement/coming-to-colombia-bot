@@ -7,10 +7,16 @@ name only activates real behavior when the master gate
 even then Layer 7A's default transport keeps the wire closed (returns
 ERROR 'not wired') until a real transport is supplied in a later layer.
 
+Phase 6B adds a third lodging option, ``fixture``: a *dark*,
+fixture-backed provider that replays recorded static snapshots from disk
+(no API, no key required — see ``fixture_transport.py``). It is NOT the
+default; the system stays on the deterministic mock until a deployer
+opts in with ``LIVE_LODGING_PROVIDER=fixture``.
+
 Env knobs:
     LIVE_PROVIDERS_ENABLE          master gate (default false)
-    LIVE_AIRFARE_PROVIDER          mock | generic   (default mock)
-    LIVE_LODGING_PROVIDER          mock | generic   (default mock)
+    LIVE_AIRFARE_PROVIDER          mock | generic            (default mock)
+    LIVE_LODGING_PROVIDER          mock | fixture | generic  (default mock)
     LIVE_AIRFARE_API_KEY           secret (never logged)
     LIVE_LODGING_API_KEY           secret (never logged)
     LIVE_PROVIDER_TIMEOUT_SECONDS  per-request budget (default 8)
@@ -22,6 +28,7 @@ from typing import Optional
 
 from agents.logging_setup import get_logger
 from .airfare import LiveAirfareProvider, make_live_airfare_provider
+from .fixture_transport import make_fixture_lodging_provider
 from .lodging import LiveLodgingProvider, make_live_lodging_provider
 from .mock import make_mock_airfare_provider, make_mock_lodging_provider
 
@@ -73,6 +80,10 @@ def build_lodging_provider(env: Optional[dict] = None) -> LiveLodgingProvider:
     name = _get(env, "LIVE_LODGING_PROVIDER", "mock").lower()
     if name == "mock":
         return make_mock_lodging_provider()
+    if name == "fixture":
+        # Phase 6B: dark, recorded-data provider. Self-gated (sentinel
+        # key, no master switch needed) and contacts no API.
+        return make_fixture_lodging_provider()
     if name != "generic":
         log.warning("unknown LIVE_LODGING_PROVIDER=%r; falling back to mock", name)
         return make_mock_lodging_provider()

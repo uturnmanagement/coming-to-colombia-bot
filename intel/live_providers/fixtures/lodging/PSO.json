@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "PSO",
+    "city_name": "Pasto",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "PSO",
+      "price_usd": 9.4,
+      "beds": 1,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PSO-1"
+    },
+    {
+      "city": "PSO",
+      "price_usd": 23.5,
+      "beds": 2,
+      "neighborhood": "Las Cuadras",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PSO-2"
+    },
+    {
+      "city": "PSO",
+      "price_usd": 34.6,
+      "beds": 2,
+      "neighborhood": "La Aurora",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PSO-3"
+    },
+    {
+      "city": "PSO",
+      "price_usd": 41.35,
+      "beds": 3,
+      "neighborhood": "San Ignacio",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PSO-4"
+    }
+  ]
+}

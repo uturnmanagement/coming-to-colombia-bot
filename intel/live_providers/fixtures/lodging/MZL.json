@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "MZL",
+    "city_name": "Manizales",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "MZL",
+      "price_usd": 10.75,
+      "beds": 1,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MZL-1"
+    },
+    {
+      "city": "MZL",
+      "price_usd": 27.4,
+      "beds": 2,
+      "neighborhood": "El Cable",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MZL-2"
+    },
+    {
+      "city": "MZL",
+      "price_usd": 40.0,
+      "beds": 2,
+      "neighborhood": "Palermo",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MZL-3"
+    },
+    {
+      "city": "MZL",
+      "price_usd": 47.9,
+      "beds": 3,
+      "neighborhood": "La Estrella",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MZL-4"
+    }
+  ]
+}

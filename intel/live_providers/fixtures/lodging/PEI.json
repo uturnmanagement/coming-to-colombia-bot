@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "PEI",
+    "city_name": "Pereira",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "PEI",
+      "price_usd": 10.75,
+      "beds": 1,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PEI-1"
+    },
+    {
+      "city": "PEI",
+      "price_usd": 28.4,
+      "beds": 2,
+      "neighborhood": "Circunvalar",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PEI-2"
+    },
+    {
+      "city": "PEI",
+      "price_usd": 41.0,
+      "beds": 2,
+      "neighborhood": "Pinares",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PEI-3"
+    },
+    {
+      "city": "PEI",
+      "price_usd": 49.0,
+      "beds": 3,
+      "neighborhood": "Álamos",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-PEI-4"
+    }
+  ]
+}

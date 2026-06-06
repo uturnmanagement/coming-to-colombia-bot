@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "BGA",
+    "city_name": "Bucaramanga",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "BGA",
+      "price_usd": 10.75,
+      "beds": 1,
+      "neighborhood": "Cabecera",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BGA-1"
+    },
+    {
+      "city": "BGA",
+      "price_usd": 29.4,
+      "beds": 2,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BGA-2"
+    },
+    {
+      "city": "BGA",
+      "price_usd": 42.4,
+      "beds": 2,
+      "neighborhood": "Sotomayor",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BGA-3"
+    },
+    {
+      "city": "BGA",
+      "price_usd": 51.0,
+      "beds": 3,
+      "neighborhood": "García Rovira",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BGA-4"
+    }
+  ]
+}

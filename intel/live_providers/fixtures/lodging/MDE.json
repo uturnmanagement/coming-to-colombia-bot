@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "MDE",
+    "city_name": "Medellín",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "MDE",
+      "price_usd": 12.75,
+      "beds": 1,
+      "neighborhood": "El Poblado",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MDE-1"
+    },
+    {
+      "city": "MDE",
+      "price_usd": 34.3,
+      "beds": 2,
+      "neighborhood": "Laureles",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MDE-2"
+    },
+    {
+      "city": "MDE",
+      "price_usd": 47.2,
+      "beds": 2,
+      "neighborhood": "Envigado",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MDE-3"
+    },
+    {
+      "city": "MDE",
+      "price_usd": 58.75,
+      "beds": 3,
+      "neighborhood": "La Candelaria",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-MDE-4"
+    }
+  ]
+}

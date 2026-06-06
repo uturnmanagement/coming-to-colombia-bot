@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "recorded_at": "2026-05-15",
+    "source": "fixture-snapshot-v1",
+    "city_code": "BAQ",
+    "city_name": "Barranquilla",
+    "note": "Static recorded sample for the dark fixture-backed lodging provider (Phase 6B). NOT live pricing; no API was contacted to produce this file."
+  },
+  "listings": [
+    {
+      "city": "BAQ",
+      "price_usd": 12.75,
+      "beds": 1,
+      "neighborhood": "El Prado",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BAQ-1"
+    },
+    {
+      "city": "BAQ",
+      "price_usd": 32.85,
+      "beds": 2,
+      "neighborhood": "Alto Prado",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BAQ-2"
+    },
+    {
+      "city": "BAQ",
+      "price_usd": 46.4,
+      "beds": 2,
+      "neighborhood": "Centro",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BAQ-3"
+    },
+    {
+      "city": "BAQ",
+      "price_usd": 57.65,
+      "beds": 3,
+      "neighborhood": "Riomar",
+      "stay_date": "2026-05-15",
+      "listing_ref": "rec-BAQ-4"
+    }
+  ]
+}
