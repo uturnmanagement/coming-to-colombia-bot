@@ -11,7 +11,9 @@ Boundary rules (enforced by code structure, not just convention):
 """
 from __future__ import annotations
 
+import html
 import json
+import os
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 from typing import Optional
@@ -28,6 +30,9 @@ from intel.heartbeat import (
 from links.telegram_dispatcher import TelegramDispatcher
 
 log = get_logger("oakstreet")
+
+# Truthy spellings accepted for env-var gates (mirrors agents.config).
+_TRUE = {"1", "true", "yes", "on"}
 
 
 @dataclass(frozen=True)
@@ -273,11 +278,74 @@ class OakStreet:
                 f"conf={reports[name].confidence:.2f}"
             )
 
+        # Phase 6A — mock lodging price appendix (gated, defensive). Added
+        # immediately before the footer so it closes the briefing body.
+        lodging_block = self._render_lodging_appendix(reports, deal_row)
+        if lodging_block:
+            sections.append(lodging_block)
+
         footer = (
             f"\n<i>Internal briefing rendered at "
             f"{when.strftime('%Y-%m-%d %H:%M:%S')} — DRY_RUN check at dispatch.</i>"
         )
         return "\n\n".join(sections) + footer
+
+    # --- Phase 6A lodging appendix ---------------------------------------
+
+    @staticmethod
+    def _lodging_destination(reports: dict, deal_row) -> Optional[str]:
+        """Resolve the destination airport code for the lodging appendix.
+
+        Primary source is the cached Delta report payload (which carries
+        an explicit `destination`); falls back to parsing the deal's
+        route signature ("direct->BAQ" / "positioning->GW->DEST").
+        """
+        delta = reports.get("delta")
+        if delta is not None:
+            dest = getattr(delta, "payload", {}).get("destination")
+            if dest:
+                return str(dest).strip().upper()
+        route = (deal_row or {}).get("last_route_signature") or ""
+        if "->" in route:
+            tail = route.rsplit("->", 1)[-1].strip()
+            return tail.upper() or None
+        return None
+
+    def _render_lodging_appendix(
+        self, reports: dict, deal_row
+    ) -> Optional[str]:
+        """Phase 6A — append the mock lodging price table for the deal's
+        destination city to the briefing.
+
+        Gated by LODGING_APPENDIX_ENABLED (default off), read directly
+        from the environment — mirroring Delta's DELTA_LIVE_RETURNS — so
+        the env var is the single source of truth without threading
+        DeskConfig through Oak Street. Fully defensive: any problem
+        (gate off, missing destination, import error, render failure)
+        returns None so a briefing is NEVER broken by lodging. The
+        lodging table is space-aligned, so it is wrapped in <pre> and
+        HTML-escaped for Telegram.
+        """
+        try:
+            gate = os.environ.get("LODGING_APPENDIX_ENABLED", "").strip().lower()
+            if gate not in _TRUE:
+                return None
+            destination = self._lodging_destination(reports, deal_row)
+            if not destination:
+                return None
+            from lodging.lodging_report import render_delta_lodging_appendix
+
+            block = render_delta_lodging_appendix(destination)
+            if not block:
+                return None
+            escaped = html.escape(block.rstrip())
+            return (
+                "<b>LODGING · accommodation estimates</b>\n"
+                f"<pre>{escaped}</pre>"
+            )
+        except Exception:  # noqa: BLE001 — lodging must never break a briefing
+            log.exception("lodging appendix render failed; omitting block")
+            return None
 
     def dispatch_briefing(
         self, deal_id: str, *, color: str = "red",

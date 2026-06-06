@@ -170,7 +170,28 @@ def render_delta_report(payload: dict) -> str:
             lines.append("")
 
     lines.extend(_render_verdict(payload, ranking))
+    lines.extend(_render_lodging_appendix(payload))
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_lodging_appendix(payload: dict) -> list[str]:
+    """Phase 6A — attach mock lodging intelligence for the destination city.
+
+    Additive and defensive: the lodging layer is a separate package, so
+    any import or rendering problem degrades to no block and never breaks
+    the flight report. Returns [] for destinations outside the supported
+    desk cities (the 15-city Colombia registry — see
+    lodging.lodging_models.CITY_REGISTRY).
+    """
+    try:
+        from lodging.lodging_report import render_delta_lodging_appendix
+
+        block = render_delta_lodging_appendix(payload.get("destination"))
+        if not block:
+            return []
+        return ["", block.rstrip()]
+    except Exception:  # noqa: BLE001 — lodging must never break the flight report
+        return []
 
 
 def _render_combo_summary(payload: dict) -> list[str]:

@@ -70,6 +70,13 @@ class DeskConfig:
     lodging_red_threshold_pct: float
     lodging_season_weighting: bool
     lodging_baseline_lookback_days: int
+    # Phase 6A — gate the mock lodging appendix in Oak Street briefings.
+    # Default off: the appendix ships dark and arms by config, never by
+    # redeploy. The orchestrator reads the LODGING_APPENDIX_ENABLED env
+    # var directly (mirroring Delta's DELTA_LIVE_RETURNS) so this flag is
+    # the single source of truth; this field surfaces it for the wiring
+    # layer and validation.
+    lodging_appendix_enabled: bool
 
     @property
     def telegram_ready(self) -> bool:
@@ -103,5 +110,8 @@ def load_desk_config() -> DeskConfig:
         lodging_season_weighting=_env_bool("LODGING_SEASON_WEIGHTING", default=True),
         lodging_baseline_lookback_days=int(
             _env("LODGING_BASELINE_LOOKBACK_DAYS", "90")
+        ),
+        lodging_appendix_enabled=_env_bool(
+            "LODGING_APPENDIX_ENABLED", default=False
         ),
     )
