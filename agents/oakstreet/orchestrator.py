@@ -28,6 +28,7 @@ from intel.heartbeat import (
     decide_policy_heartbeat,
 )
 from links.telegram_dispatcher import TelegramDispatcher
+from src.alert_formatter import format_return_block
 
 log = get_logger("oakstreet")
 
@@ -404,6 +405,10 @@ class OakStreet:
                 f"${best['round_trip_total_usd']:.0f} round-trip "
                 f"(return {best['return_date']})"
             )
+            # Tier 2: itinerary enrichment for the best priced return
+            # (airline / flights / connections / route type / LIVE-MOCK badge
+            # / guarded booking link). Honesty rules live in the formatter.
+            lines.extend(format_return_block(report.payload))
             # Phase 2.7: round-trip combo (both legs >= YELLOW).
             qcount = report.payload.get("qualifying_count", 0)
             bq = report.payload.get("best_qualifying")
