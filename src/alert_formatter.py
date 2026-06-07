@@ -189,6 +189,18 @@ def format_return_block(payload: dict) -> list[str]:
     return lines
 
 
+# --- Tier 3 lodging honesty badge (display-only) ---------------------------
+
+
+def format_lodging_badge(is_mock) -> str:
+    """LIVE only when a lodging summary is explicitly not mock; else MOCK.
+
+    Centralizes the honesty token so the coupled-stay block reads the same
+    way as the Tier 1/2 flight badges. Unknown/None provenance → MOCK.
+    """
+    return "LIVE" if is_mock is False else "MOCK"
+
+
 def _route_lines(result: DealResult) -> list[str]:
     comp = result.comparison
     lines: list[str] = []

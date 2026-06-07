@@ -40,6 +40,44 @@ def _stay(nightly_low: float, nightly_high: float, nights: int,
     )
 
 
+def discount_for_nights(accommodation: AccommodationType, nights: int) -> float:
+    """Length-of-stay discount for an arbitrary night count.
+
+    Piecewise-linear between the known anchors: 0% at 1 night, the weekly
+    discount at 7 nights, the monthly discount at 30 nights, capped at the
+    monthly discount beyond 30. Continuous and never extrapolates past the
+    monthly rate — a conservative reading of the same per-type discounts the
+    nightly/weekly/monthly projections use.
+    """
+    weekly_disc, monthly_disc = _DISCOUNTS.get(accommodation, (0.0, 0.0))
+    n = max(1, int(nights))
+    if n <= 1:
+        return 0.0
+    if n <= WEEKLY_NIGHTS:
+        return weekly_disc * (n - 1) / (WEEKLY_NIGHTS - 1)
+    if n <= MONTHLY_NIGHTS:
+        frac = (n - WEEKLY_NIGHTS) / (MONTHLY_NIGHTS - WEEKLY_NIGHTS)
+        return weekly_disc + (monthly_disc - weekly_disc) * frac
+    return monthly_disc
+
+
+def stay_for_nights(estimate: LodgingEstimate, nights: int) -> StayEstimate:
+    """Price an arbitrary-length stay from an estimate's nightly band.
+
+    Pure math over the existing per-night low/high band — no new provider
+    call — so the result inherits the estimate's MOCK/LIVE provenance.
+    """
+    n = max(1, int(nights))
+    disc = discount_for_nights(estimate.accommodation, n)
+    factor = n * (1.0 - disc)
+    return StayEstimate(
+        nights=n,
+        low_usd=round(estimate.nightly.low_usd * factor, 2),
+        high_usd=round(estimate.nightly.high_usd * factor, 2),
+        discount_pct=round(disc, 4),
+    )
+
+
 def estimate_from_quote(quote: NightlyQuote) -> LodgingEstimate:
     """Project a nightly band into nightly/weekly/monthly estimates."""
     weekly_disc, monthly_disc = _DISCOUNTS.get(

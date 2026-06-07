@@ -28,7 +28,11 @@ from intel.heartbeat import (
     decide_policy_heartbeat,
 )
 from links.telegram_dispatcher import TelegramDispatcher
-from src.alert_formatter import format_return_block
+from src.alert_formatter import (
+    _best_priced_return,
+    format_lodging_badge,
+    format_return_block,
+)
 
 log = get_logger("oakstreet")
 
@@ -326,6 +330,11 @@ class OakStreet:
         returns None so a briefing is NEVER broken by lodging. The
         lodging table is space-aligned, so it is wrapped in <pre> and
         HTML-escaped for Telegram.
+
+        Tier 3 prepends a coupled-stay block: lodging priced for the
+        selected return window plus a combined airfare + lodging trip
+        total. It degrades independently — if there is no priced return
+        window or no lodging estimate, only the fixed table renders.
         """
         try:
             gate = os.environ.get("LODGING_APPENDIX_ENABLED", "").strip().lower()
@@ -334,19 +343,71 @@ class OakStreet:
             destination = self._lodging_destination(reports, deal_row)
             if not destination:
                 return None
+
+            parts: list[str] = []
+
+            # Tier 3 — lodging coupled to the chosen return window.
+            stay_block = self._render_coupled_stay(reports, destination)
+            if stay_block:
+                parts.append(stay_block)
+
+            # Phase 6A — the fixed nightly/weekly/monthly table.
             from lodging.lodging_report import render_delta_lodging_appendix
 
             block = render_delta_lodging_appendix(destination)
-            if not block:
+            if block:
+                escaped = html.escape(block.rstrip())
+                parts.append(
+                    "<b>LODGING · accommodation estimates</b>\n"
+                    f"<pre>{escaped}</pre>"
+                )
+
+            if not parts:
                 return None
-            escaped = html.escape(block.rstrip())
-            return (
-                "<b>LODGING · accommodation estimates</b>\n"
-                f"<pre>{escaped}</pre>"
-            )
+            return "\n\n".join(parts)
         except Exception:  # noqa: BLE001 — lodging must never break a briefing
             log.exception("lodging appendix render failed; omitting block")
             return None
+
+    def _render_coupled_stay(self, reports: dict, destination: str) -> Optional[str]:
+        """Tier 3 — best-value lodging priced for the selected return window
+        plus a combined airfare + lodging trip total.
+
+        Returns None (clean degrade) when there is no Delta report, no priced
+        return window, or no lodging estimate for the destination. The lodging
+        portion keeps its own MOCK/LIVE badge — a LIVE airfare is never allowed
+        to imply the lodging estimate is live.
+        """
+        delta = reports.get("delta")
+        if delta is None:
+            return None
+        best = _best_priced_return(getattr(delta, "payload", {}) or {})
+        if best is None:
+            return None
+        nights = best.get("window_days")
+        airfare = best.get("round_trip_total_usd")
+        if not nights or airfare is None:
+            return None
+
+        from lodging.lodging_report import (
+            render_stay_window_block,
+            stay_window_estimate,
+        )
+
+        est = stay_window_estimate(destination, int(nights))
+        if est is None:
+            return None
+
+        badge = format_lodging_badge(est.is_mock)
+        combined = round(float(airfare) + est.mid_usd, 2)
+        stay_text = html.escape(render_stay_window_block(est).rstrip())
+        return (
+            f"<b>TRIP TOTAL · airfare + lodging est.</b> "
+            f"(~${combined:,.0f} for {est.nights} nights · lodging {badge})\n"
+            f"  airfare round-trip ${float(airfare):,.0f} + "
+            f"lodging ~${est.mid_usd:,.0f} ({est.accommodation_label})\n"
+            f"<pre>{stay_text}</pre>"
+        )
 
     def dispatch_briefing(
         self, deal_id: str, *, color: str = "red",
