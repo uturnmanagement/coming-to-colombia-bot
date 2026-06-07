@@ -23,6 +23,84 @@ def esc(text) -> str:
     )
 
 
+# --- Tier 1 itinerary enrichment (display-only) ----------------------------
+#
+# Every helper below reads fields already present on the FlightOffer legs of
+# the recommended RouteOption. Nothing is synthesized: flight numbers and
+# connection airports render ONLY when a provider actually supplied them
+# (placeholder/Skyscanner leave them empty), and the source badge reads LIVE
+# only when EVERY leg is provably live — unknown or placeholder provenance
+# always degrades to MOCK so mock data can never masquerade as real.
+
+
+def _source_badge(rec) -> str:
+    """LIVE only when every leg is provably live; otherwise MOCK."""
+    sources = [(getattr(leg, "source", "") or "").lower() for leg in rec.legs]
+    if sources and all(s == "live" for s in sources):
+        return "LIVE"
+    return "MOCK"
+
+
+def _airlines(rec) -> str:
+    """Unique carrier names across the legs, in travel order."""
+    seen: list[str] = []
+    for leg in rec.legs:
+        name = (leg.airline or "").strip()
+        if name and name not in seen:
+            seen.append(name)
+    return " → ".join(seen)
+
+
+def _flight_numbers(rec) -> list[str]:
+    """Real per-segment flight numbers across the legs (empty if none)."""
+    nums: list[str] = []
+    for leg in rec.legs:
+        for fn in getattr(leg, "flight_numbers", ()):
+            if fn and fn not in nums:
+                nums.append(fn)
+    return nums
+
+
+def _connections(rec) -> list[str]:
+    """Real intermediate (connection) airports across the legs (empty if none)."""
+    conns: list[str] = []
+    for leg in rec.legs:
+        for code in getattr(leg, "connections", ()):
+            if code and code not in conns:
+                conns.append(code)
+    return conns
+
+
+def _enrichment_lines(rec) -> list[str]:
+    """The Tier 1 itinerary detail block for a recommended RouteOption.
+
+    Flight-number and connection lines are emitted only when a provider
+    supplied them; the route-type and source badge are always shown.
+    """
+    lines: list[str] = []
+    if rec.strategy == "positioning" and rec.gateway:
+        lines.append(
+            f"<b>Route:</b> Positioning via {esc(region.city_label(rec.gateway))}"
+        )
+    else:
+        lines.append("<b>Route:</b> Direct")
+
+    airlines = _airlines(rec)
+    if airlines:
+        lines.append(f"<b>Airline:</b> {esc(airlines)}")
+
+    flights = _flight_numbers(rec)
+    if flights:
+        lines.append(f"<b>Flights:</b> {esc(', '.join(flights))}")
+
+    connections = _connections(rec)
+    if connections:
+        lines.append(f"<b>Connections:</b> {esc(', '.join(connections))}")
+
+    lines.append(f"<b>Source:</b> {_source_badge(rec)}")
+    return lines
+
+
 def _route_lines(result: DealResult) -> list[str]:
     comp = result.comparison
     lines: list[str] = []
@@ -59,6 +137,7 @@ def format_deal_alert(result: DealResult) -> str:
             f"<b>Price:</b> ${rec.total_price:,.0f}",
             f"<b>Departs:</b> {rec.depart_dt:%a %b %d, %H:%M}",
             f"<b>Arrives:</b> {rec.final_arrival_dt:%a %b %d, %H:%M}",
+            *_enrichment_lines(rec),
         ]
     if cls.effective_savings_usd > 0:
         lines.append(f"<b>Savings:</b> ${cls.effective_savings_usd:,.0f}")
@@ -160,6 +239,7 @@ def format_destination_detail(result: DealResult) -> str:
             f"<b>Recommended:</b> {esc(rec.describe())}",
             f"<b>Departs:</b> {rec.depart_dt:%a %b %d, %H:%M}",
             f"<b>Arrives:</b> {rec.final_arrival_dt:%a %b %d, %H:%M}",
+            *_enrichment_lines(rec),
         ]
     lines += ["", f"<b>Urgency:</b> {cls.urgency_score:.0f}/100", esc(cls.explanation)]
     if result.arrival.warning:
