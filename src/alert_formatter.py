@@ -23,6 +23,94 @@ def esc(text) -> str:
     )
 
 
+# --- Tier 2 return-optimizer enrichment (display-only, dict-driven) ---------
+#
+# These helpers read the Delta specialist payload dict (already JSON-safe;
+# see agents/delta/specialist.py:_option_to_dict). Nothing is synthesized:
+# flight numbers and connection airports render ONLY when a provider supplied
+# them, the source badge reads LIVE only for a provably-live option, and the
+# booking link is a guarded BONUS — shown only when the option is live AND
+# carries a validated http(s) URL. A non-empty booking_url only ever comes
+# from live Skyscanner, so it never appears on placeholder/MOCK data.
+
+_BOOKING_URL_SCHEMES = ("https://", "http://")
+_UNSAFE_URL_CHARS = set(" \t\r\n\"'<>`")
+
+
+def _is_safe_booking_url(url) -> bool:
+    """True only for a well-formed http(s) link safe to embed in an href."""
+    if not isinstance(url, str):
+        return False
+    u = url.strip()
+    for scheme in _BOOKING_URL_SCHEMES:
+        if u.lower().startswith(scheme) and len(u) > len(scheme):
+            return all(c not in _UNSAFE_URL_CHARS for c in u)
+    return False
+
+
+def _ret_source_badge(option: dict) -> str:
+    """LIVE only for a provably-live option; everything else is MOCK."""
+    return "LIVE" if str(option.get("source", "")).lower() == "live" else "MOCK"
+
+
+def _ret_booking_link(option: dict):
+    """A guarded booking link: live source + existing + valid URL, else None."""
+    if str(option.get("source", "")).lower() != "live":
+        return None
+    url = str(option.get("booking_url") or "").strip()
+    if not _is_safe_booking_url(url):
+        return None
+    return f'<a href="{esc(url)}">Book this return</a>'
+
+
+def _best_priced_return(payload: dict):
+    """The cheapest fully-priced return option dict, or None."""
+    options = payload.get("options") or []
+    priced = [
+        o for o in options
+        if isinstance(o, dict) and o.get("round_trip_total_usd") is not None
+    ]
+    if not priced:
+        return None
+    return min(priced, key=lambda o: o["round_trip_total_usd"])
+
+
+def format_return_block(payload: dict) -> list[str]:
+    """Tier 2 itinerary enrichment for the best priced return option.
+
+    Returns Telegram-HTML lines to append to the return-pairing section, or
+    [] when there is no priced return to enrich (the caller still prints its
+    own "no priced return windows" line in that case).
+    """
+    best = _best_priced_return(payload)
+    if best is None:
+        return []
+
+    lines: list[str] = []
+    route_type = str(best.get("route_type") or "").strip()
+    if route_type:
+        lines.append(f"  ↳ <b>Return route:</b> {esc(route_type)}")
+
+    airline = str(best.get("airline") or "").strip()
+    if airline:
+        lines.append(f"  ↳ <b>Airline:</b> {esc(airline)}")
+
+    flights = [str(f) for f in (best.get("flight_numbers") or []) if f]
+    if flights:
+        lines.append(f"  ↳ <b>Flights:</b> {esc(', '.join(flights))}")
+
+    connections = [str(c) for c in (best.get("connections") or []) if c]
+    if connections:
+        lines.append(f"  ↳ <b>Connections:</b> {esc(', '.join(connections))}")
+
+    lines.append(f"  ↳ <b>Source:</b> {_ret_source_badge(best)}")
+
+    link = _ret_booking_link(best)
+    if link:
+        lines.append(f"  ↳ {link}")
+    return lines
+
+
 def _route_lines(result: DealResult) -> list[str]:
     comp = result.comparison
     lines: list[str] = []
